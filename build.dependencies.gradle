@@ -1,17 +1,31 @@
-repositories {
-    mavenCentral()
-    google() // Needed for androidx
+android {
+    configurations.configureEach {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.jetbrains.kotlinx' && details.requested.name.startsWith('kotlinx-coroutines')) {
+                details.useVersion '1.6.4'
+            }
+        }
+    }
 }
 
 dependencies {
-    implementation 'org.firstinspires.ftc:Inspection:12.0.0'
-    implementation 'org.firstinspires.ftc:Blocks:12.0.0'
-    implementation 'org.firstinspires.ftc:RobotCore:12.0.0'
-    implementation 'org.firstinspires.ftc:RobotServer:12.0.0'
-    implementation 'org.firstinspires.ftc:OnBotJava:12.0.0'
-    implementation 'org.firstinspires.ftc:Hardware:12.0.0'
-    implementation 'org.firstinspires.ftc:FtcCommon:12.0.0'
-    implementation 'org.firstinspires.ftc:Vision:12.0.0'
+    implementation 'org.firstinspires.ftc:Inspection:11.2.1'
+    implementation 'org.firstinspires.ftc:Blocks:11.2.1'
+    //noinspection Aligned16KB
+    implementation 'org.firstinspires.ftc:RobotCore:11.2.1'
+    implementation 'org.firstinspires.ftc:RobotServer:11.2.1'
+    implementation 'org.firstinspires.ftc:OnBotJava:11.2.1'
+    implementation 'org.firstinspires.ftc:Hardware:11.2.1'
+    implementation 'org.firstinspires.ftc:FtcCommon:11.2.1'
+    implementation 'org.firstinspires.ftc:Vision:11.2.1'
     implementation 'androidx.appcompat:appcompat:1.2.0'
-}
 
+    implementation 'com.bylazar:fullpanels:1.0.12'
+    implementation "dev.frozenmilk.dairy:CachingHardware:1.0.0"
+
+    implementation 'com.pedropathing.ivy:core:1.1.0'
+    implementation 'com.pedropathing.ivy:pedro:1.1.0'
+
+    implementation 'com.pedropathing:revhub:3.0.0'
+    implementation 'com.pedropathing:tuning:1.0.0'
+}

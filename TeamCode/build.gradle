@@ -22,8 +22,16 @@ android {
     packagingOptions {
         jniLibs.useLegacyPackaging true
     }
+
+    compileSdk 34
+    defaultConfig {
+        minSdk 24
+    }
 }
 
 dependencies {
     implementation project(':FtcRobotController')
+
+    implementation "dev.frozenmilk.dairy:CachingHardware"
+    implementation "com.bylazar:configurables:1.0.5"
 }
