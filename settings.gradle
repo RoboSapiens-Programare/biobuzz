@@ -6,5 +6,15 @@ pluginManagement {
     }
 }
 
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = "https://mymaven.bylazar.com/releases" }
+        maven { url = "https://repo.dairy.foundation/releases" }
+    }
+}
+
 include ':FtcRobotController'
 include ':TeamCode'
