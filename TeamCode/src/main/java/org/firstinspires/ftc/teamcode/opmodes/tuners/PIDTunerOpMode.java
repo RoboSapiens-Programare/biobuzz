@@ -32,8 +32,8 @@ public class PIDTunerOpMode extends OpMode {
     @Override
     public void init() {
         motor = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, MOTOR_NAME));
-        motor2 = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel_right"));
-        motor2.setDirection(DcMotorSimple.Direction.REVERSE);
+//        motor2 = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel_right"));
+//        motor2.setDirection(DcMotorSimple.Direction.REVERSE);
         tuner = new PIDTuner(VELOCITY_SETPOINT, RELAY_POWER, CYCLES);
     }
 
@@ -49,11 +49,11 @@ public class PIDTunerOpMode extends OpMode {
         if (tuner.getState() == PIDTuner.TuningStates.COMPLETE
                 || tuner.getState() == PIDTuner.TuningStates.FAILED) {
             motor.setPower(0);
-            motor2.setPower(0);
+//            motor2.setPower(0);
         } else {
             double t = tuner.update(motor.getVelocity());
             motor.setPower(t);
-            motor2.setPower(t);
+//            motor2.setPower(t);
         }
 
         telemetry.addData("State", tuner.getState());

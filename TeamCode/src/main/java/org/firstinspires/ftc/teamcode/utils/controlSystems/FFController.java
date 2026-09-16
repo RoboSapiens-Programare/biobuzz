@@ -83,6 +83,9 @@ public class FFController {
             pidOutput += kS * Math.signum(error);
         }
 
+        // Velocity / acceleration feedforward (identified by FFTuner)
+        pidOutput += kV * targetVelocity + kA * targetAcceleration;
+
         return Range.clip(pidOutput, minOutput, maxOutput);
     }
 

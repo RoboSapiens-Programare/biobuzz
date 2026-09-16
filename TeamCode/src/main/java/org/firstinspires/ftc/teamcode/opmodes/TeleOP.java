@@ -7,16 +7,13 @@ import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.commands.RobotCommands;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
-import org.firstinspires.ftc.teamcode.utils.controlSystems.PIDFController;
 
 import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 
@@ -31,14 +28,10 @@ public class TeleOP extends RobotOpMode {
 
     private States state;
 
-    public static boolean TAIE_DEGETE_LU_COCO = true;
 
     private final ElapsedTime debounceTimer = new ElapsedTime();
 
     private CachingDcMotorEx front_left, front_right, rear_left, rear_right;
-
-    private final PIDFController pidf = new PIDFController(FlywheelConfig.kp, FlywheelConfig.ki, FlywheelConfig.kd, 0.1, -1, 1);
-    private CachingDcMotorEx flywheelLeft, flywheelRight;
 
     private void changeState(States newState) {
         state = newState;
@@ -51,26 +44,25 @@ public class TeleOP extends RobotOpMode {
                 RobotCommands.spoolShooter(robot.outtake).schedule();
                 break;
         }
+
+        debounceTimer.reset();
     }
 
     @Override
     protected void onInit() {
-        changeState(States.INTAKE);
-
         front_left = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "front_left"));
         front_right = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "front_right"));
         rear_left = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "rear_left"));
         rear_right = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "rear_right"));
 
-        flywheelLeft = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel_left"));
-        flywheelRight = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel_right"));
-        flywheelRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        flywheelLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        flywheelRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        robot.outtake.setManualFlywheel(true);
+        changeState(States.INTAKE);
 
         follower.setHeading(0);
+    }
+
+    @Override
+    protected void onStart() {
+        debounceTimer.reset();
     }
 
     @Override
@@ -86,50 +78,31 @@ public class TeleOP extends RobotOpMode {
 
         switch (state) {
             case INTAKE:
-                if (gamepad1.right_trigger > 0.1 && TAIE_DEGETE_LU_COCO) {
+                if (gamepad1.right_trigger_pressed) {
                     RobotCommands.pullBalls(robot.intake).schedule();
-                } else if (gamepad1.right_bumper) {
+                } else if (gamepad1.left_trigger_pressed) {
                     RobotCommands.pushBalls(robot.intake).schedule();
                 } else {
                     RobotCommands.idleIntake(robot.intake).schedule();
                 }
 
-                if (gamepad1.cross && debounceTimer.milliseconds() > 100) {
+                if (gamepad1.cross && debounceTimer.milliseconds() > 20) {
                     changeState(States.OUTTAKE);
-
-                    debounceTimer.reset();
                 }
                 break;
 
             case OUTTAKE:
-                if (gamepad1.right_trigger > 0.1) {
-                    RobotCommands.pullBalls(robot.intake).schedule();
-//                    RobotCommands.fireShooter(robot.outtake).schedule();
+                if (gamepad1.right_trigger_pressed) {
+                    RobotCommands.fireShooter(robot.outtake).schedule();
                 } else {
-//                    RobotCommands.stopFiring(robot.outtake).schedule();
-                    RobotCommands.idleIntake(robot.intake).schedule();
+                    RobotCommands.stopFiring(robot.outtake).schedule();
                 }
 
-                if (gamepad1.cross && debounceTimer.milliseconds() > 100) {
+                if (gamepad1.cross && debounceTimer.milliseconds() > 20) {
                     changeState(States.INTAKE);
-
-                    debounceTimer.reset();
                 }
                 break;
         }
-
-        pidf.kP = FlywheelConfig.kp;
-        pidf.kI = FlywheelConfig.ki;
-        pidf.kD = FlywheelConfig.kd;
-
-        if (gamepad1.left_trigger_pressed)
-            pidf.setSetpoint(FlywheelConfig.target);
-        else pidf.setSetpoint(-800);
-
-
-        double p = pidf.update(-flywheelLeft.getVelocity());
-        flywheelLeft.setPower(p);
-        flywheelRight.setPower(p);
 
         Pose robotPose = follower.pose();
 
@@ -139,13 +112,8 @@ public class TeleOP extends RobotOpMode {
         telemetry.addData("Robot Y", robotPose.y());
         telemetry.addData("Robot Heading", Math.toDegrees(robotPose.heading()));
 
-        telemetry.addData("current speed", flywheelLeft.getVelocity());
-        telemetry.addData("target speed", FlywheelConfig.target);
-        telemetry.addData("p", p);
-        telemetry.addData("kp", FlywheelConfig.kp);
-        telemetry.addData("ki", FlywheelConfig.ki);
-        telemetry.addData("kd", FlywheelConfig.kd);
-
+        telemetry.addData("Shooter speed", robot.outtake.getCurrentSpeed());
+        telemetry.addData("Shooter target", robot.outtake.getTarget());
         telemetry.addData("Front left current", front_left.getCurrent(CurrentUnit.AMPS));
         telemetry.addData("Front right current", front_right.getCurrent(CurrentUnit.AMPS));
         telemetry.addData("Rear left current", rear_left.getCurrent(CurrentUnit.AMPS));
