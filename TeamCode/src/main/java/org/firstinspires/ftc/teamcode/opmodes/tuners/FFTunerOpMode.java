@@ -44,8 +44,8 @@ public class FFTunerOpMode extends OpMode {
     @Override
     public void init() {
         motor = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, MOTOR_NAME));
-        motor2 = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, MOTOR_NAME_2));
-        motor2.setDirection(DcMotorSimple.Direction.REVERSE);
+//        motor2 = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, MOTOR_NAME_2));
+//        motor2.setDirection(DcMotorSimple.Direction.REVERSE);
         tuner = new FFTuner(MAX_POWER, POWER_STEP, STEADY_STATE_TIME, MOTION_THRESHOLD, TIMEOUT_SECONDS,
                 PID_SETPOINT, RELAY_POWER, PID_CYCLES, PID_TIMEOUT_SECONDS);
     }
@@ -62,11 +62,11 @@ public class FFTunerOpMode extends OpMode {
         if (tuner.getState() == FFTuner.TuningStates.COMPLETE
                 || tuner.getState() == FFTuner.TuningStates.FAILED) {
             motor.setPower(0);
-            motor2.setPower(0);
+//            motor2.setPower(0);
         } else {
             double d = tuner.update(motor.getVelocity());
             motor.setPower(d);
-            motor2.setPower(d);
+//            motor2.setPower(d);
         }
 
         telemetry.addData("State", tuner.getState());

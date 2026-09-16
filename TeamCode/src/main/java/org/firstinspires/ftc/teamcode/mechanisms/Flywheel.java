@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.utils.controlSystems.FFController;
-import org.firstinspires.ftc.teamcode.utils.controlSystems.PIDFController;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +16,15 @@ public class Flywheel implements Mechanism {
 
     private final List<CachingDcMotorEx> motors = new ArrayList<>();
     private CachingDcMotorEx encoder;
-    private double idlingVelocity = 0;
+    public double idlingPower = 0;
     private double targetVelocity;
+
+    public enum FlywheelMode {
+        IDLING,
+        PRIMED
+    }
+
+    public FlywheelMode mode = FlywheelMode.IDLING;
 
 
     public Flywheel setEncoder(DcMotorEx encoder) {
@@ -59,18 +65,6 @@ public class Flywheel implements Mechanism {
         return this;
     }
 
-    public Flywheel setAcceleration(double acceleration) {
-        ffController.setTargetAcceleration(acceleration);
-
-        return this;
-    }
-
-    public Flywheel setIdlingVelocity(double velocity) {
-        idlingVelocity = velocity;
-
-        return this;
-    }
-
     public void setTargetVelocity(double velocity) {
         targetVelocity = velocity;
         ffController.setTargetVelocity(velocity);
@@ -80,7 +74,7 @@ public class Flywheel implements Mechanism {
         return ffController.velocityReached();
     }
 
-    public double getCurrentSpeed() {
+    public double getCurrentVelocity() {
         return encoder.getVelocity();
     }
 
@@ -88,24 +82,9 @@ public class Flywheel implements Mechanism {
         return targetVelocity;
     }
 
-    public double getKP() {
-        return ffController.kP;
-    }
-
-    public double getKI() {
-        return ffController.kI;
-    }
-
-    public double getKD() {
-        return ffController.kD;
-    }
 
     public void setTolerance(double tolerance) {
         ffController.setTolerance(tolerance);
-    }
-
-    public void idle() {
-        setTargetVelocity(idlingVelocity);
     }
 
     @Override
@@ -115,11 +94,22 @@ public class Flywheel implements Mechanism {
 
     @Override
     public void update() {
-        double output = ffController.update(encoder.getVelocity());
+        switch (mode) {
+            case IDLING:
+                for (DcMotorEx motor : motors) {
+                    motor.setPower(idlingPower);
+                }
+                break;
+            case PRIMED:
+                double output = ffController.update(encoder.getVelocity());
 
-        for (DcMotorEx motor : motors) {
-            motor.setPower(output);
+                for (DcMotorEx motor : motors) {
+                    motor.setPower(output);
+                }
+                break;
         }
+
+
     }
 
     @Override
