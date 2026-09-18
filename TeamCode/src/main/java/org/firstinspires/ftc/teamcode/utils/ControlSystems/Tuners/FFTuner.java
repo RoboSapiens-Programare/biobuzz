@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.utils.ControlSystems.Tuners;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,26 +78,49 @@ public class FFTuner {
     /**
      * FF-only tuner (no PID relay stage).
      */
-    public FFTuner(double maxPower, double powerStep, double settleTime, double thresholdVelocity, double timeoutSeconds) {
-        this(maxPower, powerStep, settleTime, thresholdVelocity, timeoutSeconds,
-                0, 0, 0, 0, false);
+    public FFTuner(
+            double maxPower, double powerStep, double settleTime, double thresholdVelocity, double timeoutSeconds) {
+        this(maxPower, powerStep, settleTime, thresholdVelocity, timeoutSeconds, 0, 0, 0, 0, false);
     }
 
     /**
      * Combined FF + PID tuner. After the ramp fit completes, a relay test is run on top of the
      * identified feedforward around pidSetpoint.
      */
-    public FFTuner(double maxPower, double powerStep, double settleTime, double thresholdVelocity,
-                   double timeoutSeconds,
-                   double pidSetpoint, double relayPower, int pidCycles, double pidTimeoutSeconds) {
-        this(maxPower, powerStep, settleTime, thresholdVelocity, timeoutSeconds,
-                pidSetpoint, relayPower, pidCycles, pidTimeoutSeconds, true);
+    public FFTuner(
+            double maxPower,
+            double powerStep,
+            double settleTime,
+            double thresholdVelocity,
+            double timeoutSeconds,
+            double pidSetpoint,
+            double relayPower,
+            int pidCycles,
+            double pidTimeoutSeconds) {
+        this(
+                maxPower,
+                powerStep,
+                settleTime,
+                thresholdVelocity,
+                timeoutSeconds,
+                pidSetpoint,
+                relayPower,
+                pidCycles,
+                pidTimeoutSeconds,
+                true);
     }
 
-    private FFTuner(double maxPower, double powerStep, double settleTime, double thresholdVelocity,
-                    double timeoutSeconds,
-                    double pidSetpoint, double relayPower, int pidCycles, double pidTimeoutSeconds,
-                    boolean pidEnabled) {
+    private FFTuner(
+            double maxPower,
+            double powerStep,
+            double settleTime,
+            double thresholdVelocity,
+            double timeoutSeconds,
+            double pidSetpoint,
+            double relayPower,
+            int pidCycles,
+            double pidTimeoutSeconds,
+            boolean pidEnabled) {
         if (maxPower <= 0 || powerStep <= 0) {
             throw new IllegalArgumentException("maxPower and powerStep must be positive");
         }

@@ -3,13 +3,10 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-
-import org.firstinspires.ftc.teamcode.utils.ControlSystems.FFController;
-
+import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 import java.util.ArrayList;
 import java.util.List;
-
-import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
+import org.firstinspires.ftc.teamcode.utils.ControlSystems.FFController;
 
 public class Flywheel implements Mechanism {
     private final FFController ffController = new FFController(0, 0, 0, 0, 0, 0);
@@ -25,7 +22,6 @@ public class Flywheel implements Mechanism {
     }
 
     public FlywheelMode mode = FlywheelMode.IDLING;
-
 
     public Flywheel setEncoder(DcMotorEx encoder) {
 
@@ -49,7 +45,6 @@ public class Flywheel implements Mechanism {
     public Flywheel addMotor(DcMotorEx motor) {
         return addMotor(motor, false);
     }
-
 
     public Flywheel setPIDConstants(double kP, double kI, double kD) {
         ffController.setPIDConstants(kP, kI, kD);
@@ -82,7 +77,6 @@ public class Flywheel implements Mechanism {
         return targetVelocity;
     }
 
-
     public Flywheel setTolerance(double tolerance) {
         ffController.setTolerance(tolerance);
         return this;
@@ -94,9 +88,7 @@ public class Flywheel implements Mechanism {
     }
 
     @Override
-    public void init() {
-
-    }
+    public void init() {}
 
     @Override
     public void update() {
@@ -114,8 +106,6 @@ public class Flywheel implements Mechanism {
                 }
                 break;
         }
-
-
     }
 
     @Override
@@ -137,5 +127,4 @@ public class Flywheel implements Mechanism {
             motor.setPower(0);
         }
     }
-
 }

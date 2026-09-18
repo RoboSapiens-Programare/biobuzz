@@ -1,16 +1,13 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
-//import com.arcrobotics.ftclib.hardware.motors.Motor;
+// import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-
-import org.firstinspires.ftc.teamcode.utils.ControlSystems.PIDFController;
-
+import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 import java.util.ArrayList;
 import java.util.List;
-
-import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
+import org.firstinspires.ftc.teamcode.utils.ControlSystems.PIDFController;
 
 public class LinearSlider implements Mechanism {
     private final PIDFController pidfController = new PIDFController(0, 0, 0, 0);
@@ -18,7 +15,6 @@ public class LinearSlider implements Mechanism {
     private final List<CachingDcMotorEx> motors = new ArrayList<>();
     private CachingDcMotorEx encoder;
     private double targetPosition;
-
 
     public LinearSlider setEncoder(CachingDcMotorEx encoder) {
         this.encoder = encoder;
@@ -106,5 +102,4 @@ public class LinearSlider implements Mechanism {
             motor.setPower(0);
         }
     }
-
 }

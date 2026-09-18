@@ -7,14 +7,11 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.teamcode.mechanisms.Flywheel;
-import org.firstinspires.ftc.teamcode.utils.ControlSystems.Tuners.FFTuner;
-
+import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 import java.util.ArrayList;
 import java.util.List;
-
-import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
+import org.firstinspires.ftc.teamcode.mechanisms.Flywheel;
+import org.firstinspires.ftc.teamcode.utils.ControlSystems.Tuners.FFTuner;
 
 /**
  * Tool OpMode that tunes the flywheel's FF + PID with a configurable motor table.
@@ -33,11 +30,9 @@ import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
  */
 @TeleOp(name = "Flywheel Tuner", group = "Tuners")
 public class FlywheelTunerOpMode extends OpMode {
-/** One entry per flywheel motor. The first entry is the velocity encoder. */
+    /** One entry per flywheel motor. The first entry is the velocity encoder. */
     private static final MotorSpec[] MOTORS = {
-        new MotorSpec("flywheel_left", false),
-
-        new MotorSpec("flywheel_right", true),
+        new MotorSpec("flywheel_left", false), new MotorSpec("flywheel_right", true),
     };
 
     // FF ramp stage
@@ -94,8 +89,16 @@ public class FlywheelTunerOpMode extends OpMode {
 
         flywheel = built;
 
-        tuner = new FFTuner(MAX_POWER, POWER_STEP, STEADY_STATE_TIME, MOTION_THRESHOLD, TIMEOUT_SECONDS,
-                PID_SETPOINT, RELAY_POWER, PID_CYCLES, PID_TIMEOUT_SECONDS);
+        tuner = new FFTuner(
+                MAX_POWER,
+                POWER_STEP,
+                STEADY_STATE_TIME,
+                MOTION_THRESHOLD,
+                TIMEOUT_SECONDS,
+                PID_SETPOINT,
+                RELAY_POWER,
+                PID_CYCLES,
+                PID_TIMEOUT_SECONDS);
     }
 
     @Override
@@ -162,9 +165,10 @@ public class FlywheelTunerOpMode extends OpMode {
         telemetry.addData("Verify error", String.format("%.1f", target - getVelocity()));
 
         if (verifyTimer.seconds() > VERIFY_TIMEOUT_SECONDS) {
-            telemetry.addLine(getVelocity() >= target - 15
-                    ? "HOLDS target to within tolerance."
-                    : "Does NOT reach target - lower target or re-tune.");
+            telemetry.addLine(
+                    getVelocity() >= target - 15
+                            ? "HOLDS target to within tolerance."
+                            : "Does NOT reach target - lower target or re-tune.");
         }
     }
 
@@ -173,11 +177,16 @@ public class FlywheelTunerOpMode extends OpMode {
             return "VERIFY";
         }
         switch (tuner.getState()) {
-            case IDLE: return "IDLE - press START";
-            case TUNING: return "TUNING";
-            case COMPLETE: return "COMPLETE";
-            case FAILED: return "FAILED";
-            default: return tuner.getState().name();
+            case IDLE:
+                return "IDLE - press START";
+            case TUNING:
+                return "TUNING";
+            case COMPLETE:
+                return "COMPLETE";
+            case FAILED:
+                return "FAILED";
+            default:
+                return tuner.getState().name();
         }
     }
 

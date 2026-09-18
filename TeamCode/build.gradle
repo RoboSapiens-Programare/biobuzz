@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.diffplug.spotless'
 
 //
 // build.gradle in TeamCode
@@ -33,10 +34,17 @@ dependencies {
     implementation project(':FtcRobotController')
 
     implementation "dev.frozenmilk.dairy:CachingHardware:1.0.0"
-//    implementation "dev.frozenmilk.dairy:Pasteurized:1.0.0"
+    //    implementation "dev.frozenmilk.dairy:Pasteurized:1.0.0"
     // Must align with the resolved Sinister 2.3.0 + Sloth stack; 1.0.0 used the removed
     // dev.frozenmilk.sinister.apphooks package and never hooks FeatureRegistrar into the event loop.
-//    implementation "dev.frozenmilk.dairy:Core:2.2.4"
+    //    implementation "dev.frozenmilk.dairy:Core:2.2.4"
 
     implementation "com.bylazar:configurables:1.0.5"
+}
+
+spotless {
+    java {
+        target 'src/main/java/**/*.java'
+        palantirJavaFormat('2.97.0')
+    }
 }

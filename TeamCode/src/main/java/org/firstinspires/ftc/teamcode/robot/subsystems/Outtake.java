@@ -3,11 +3,9 @@ package org.firstinspires.ftc.teamcode.robot.subsystems;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
-
+import dev.frozenmilk.dairy.cachinghardware.CachingServo;
 import org.firstinspires.ftc.teamcode.mechanisms.Flywheel;
 import org.firstinspires.ftc.teamcode.mechanisms.Roller;
-
-import dev.frozenmilk.dairy.cachinghardware.CachingServo;
 
 public class Outtake implements Subsystem {
 
@@ -16,13 +14,10 @@ public class Outtake implements Subsystem {
 
     private final CachingServo gate;
 
-
     private final double GATE_OPEN = 0.5;
     private final double GATE_CLOSED = 0;
 
-
     private boolean firing = false;
-
 
     public Outtake(HardwareMap hwMap) {
         flywheel.addMotor(hwMap.get(DcMotorEx.class, "flywheel_left"), false)
@@ -32,7 +27,6 @@ public class Outtake implements Subsystem {
                 .setFFConstants(0.0500, 0.0005, 0.0000)
                 .setTolerance(40)
                 .setIdlingPower(0.2);
-
 
         gate = new CachingServo(hwMap.get(Servo.class, "gate"));
     }

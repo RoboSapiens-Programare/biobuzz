@@ -58,8 +58,7 @@ public abstract class Formatter {
     protected void checkSize(Object[] values) {
         if (values.length != fields.size()) {
             throw new IllegalArgumentException(
-                    "Expected " + fields.size() + " values but got " + values.length
-                            + " for fields " + fields);
+                    "Expected " + fields.size() + " values but got " + values.length + " for fields " + fields);
         }
     }
 }

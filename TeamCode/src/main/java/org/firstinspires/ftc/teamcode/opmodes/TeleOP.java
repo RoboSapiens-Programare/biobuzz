@@ -11,13 +11,11 @@ import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
+import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
+// import dev.frozenmilk.dairy.pasteurized.Pasteurized;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.commands.RobotCommands;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
-
-import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
-//import dev.frozenmilk.dairy.pasteurized.Pasteurized;
 
 @TeleOp
 @Configurable
@@ -52,8 +50,7 @@ public class TeleOP extends RobotOpMode {
     }
 
     private void toggleState() {
-        if (state == States.INTAKE)
-            changeState(States.OUTTAKE);
+        if (state == States.INTAKE) changeState(States.OUTTAKE);
         else changeState(States.INTAKE);
     }
 
@@ -83,8 +80,7 @@ public class TeleOP extends RobotOpMode {
                 -gamepad1.left_stick_y,
                 -gamepad1.left_stick_x,
                 -gamepad1.right_stick_x,
-                follower.pose().heading()
-        );
+                follower.pose().heading());
 
         follower.manual(powers);
 
@@ -106,7 +102,7 @@ public class TeleOP extends RobotOpMode {
             case OUTTAKE:
                 if (gamepad1.rightTriggerWasPressed()) {
                     RobotCommands.fireShooter(robot.outtake, robot.intake).schedule();
-                } else if (gamepad1.rightTriggerWasReleased()){
+                } else if (gamepad1.rightTriggerWasReleased()) {
                     RobotCommands.stopFiring(robot.outtake).schedule();
                 }
                 break;

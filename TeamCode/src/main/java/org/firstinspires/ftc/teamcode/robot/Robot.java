@@ -1,16 +1,11 @@
 package org.firstinspires.ftc.teamcode.robot;
 
-//import com.pedropathing.follower.Follower;
-//import com.pedropathing.math.Pose;
 import com.pedropathing.follower.Follower;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
 import java.util.Collections;
 import java.util.List;
-
-//import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Outtake;
@@ -32,7 +27,7 @@ public class Robot {
     };
 
     public static Alliance alliance = Alliance.BLUE;
-//    public static Pose transitionPose = new Pose(63, 9, Math.PI / 2);
+    //    public static Pose transitionPose = new Pose(63, 9, Math.PI / 2);
 
     public Robot(HardwareMap hwMap) {
         allHubs = hwMap.getAll(LynxModule.class);
@@ -45,7 +40,6 @@ public class Robot {
         intake = new Intake(hwMap);
 
         follower = Constants.create(hwMap);
-
     }
 
     public static void resetCache() {
@@ -53,7 +47,6 @@ public class Robot {
             hub.clearBulkCache();
         }
     }
-
 
     public void update() {
         intake.update();

@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters;
 
 import com.google.gson.Gson;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 

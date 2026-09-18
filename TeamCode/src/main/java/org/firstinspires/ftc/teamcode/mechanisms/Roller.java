@@ -3,13 +3,10 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-
+import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 import java.util.ArrayList;
 import java.util.List;
-
-import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 public class Roller implements Mechanism {
     private final List<CachingDcMotorEx> motors = new ArrayList<>();
@@ -62,9 +59,7 @@ public class Roller implements Mechanism {
     }
 
     @Override
-    public void init() {
-
-    }
+    public void init() {}
 
     public boolean isOverCurrent() {
         return maxCurrent > currentLimit;
@@ -87,12 +82,10 @@ public class Roller implements Mechanism {
     }
 
     @Override
-    public void reset() {
-    }
+    public void reset() {}
 
     @Override
     public void stop() {
         idle();
     }
-
 }

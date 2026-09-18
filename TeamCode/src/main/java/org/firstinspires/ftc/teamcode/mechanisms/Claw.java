@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.qualcomm.robotcore.hardware.Servo;
-
+import dev.frozenmilk.dairy.cachinghardware.CachingServo;
 import java.util.ArrayList;
 import java.util.List;
-
-import dev.frozenmilk.dairy.cachinghardware.CachingServo;
 
 public class Claw implements Mechanism {
     private final List<CachingServo> servos = new ArrayList<>();
@@ -29,15 +27,20 @@ public class Claw implements Mechanism {
         return this;
     }
 
-    public void setPosition(double position) { this.targetPosition = position; }
+    public void setPosition(double position) {
+        this.targetPosition = position;
+    }
 
-    public void open() { setPosition(openPosition); }
-    public void close() { setPosition(closedPosition); }
+    public void open() {
+        setPosition(openPosition);
+    }
+
+    public void close() {
+        setPosition(closedPosition);
+    }
 
     @Override
-    public void init() {
-
-    }
+    public void init() {}
 
     @Override
     public void update() {
@@ -47,12 +50,8 @@ public class Claw implements Mechanism {
     }
 
     @Override
-    public void reset() {
-
-    }
+    public void reset() {}
 
     @Override
-    public void stop() {
-
-    }
+    public void stop() {}
 }

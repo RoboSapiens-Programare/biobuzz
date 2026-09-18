@@ -3,12 +3,7 @@ package org.firstinspires.ftc.teamcode.robot.subsystems;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
-import org.firstinspires.ftc.teamcode.mechanisms.Flywheel;
-import org.firstinspires.ftc.teamcode.mechanisms.LinearSlider;
 import org.firstinspires.ftc.teamcode.mechanisms.Roller;
-
-import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 
 @Configurable
 public class Intake implements Subsystem {
@@ -21,10 +16,11 @@ public class Intake implements Subsystem {
         rollerOne.setPower(0.72);
     }
 
-    public void pullBalls(){
+    public void pullBalls() {
         rollerOne.pull();
     }
-    public void pushBalls(){
+
+    public void pushBalls() {
         rollerOne.push();
     }
 
@@ -33,8 +29,7 @@ public class Intake implements Subsystem {
     }
 
     @Override
-    public void init() {
-    }
+    public void init() {}
 
     @Override
     public void update() {
@@ -42,8 +37,7 @@ public class Intake implements Subsystem {
     }
 
     @Override
-    public void reset() {
-    }
+    public void reset() {}
 
     @Override
     public void stop() {

@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class PIDTuner {
     public double setpoint;
     public double power;
-    
+
     private final int requiredCycles;
     private int currentCycle = 0;
     private boolean lastAbove = false;
@@ -45,7 +45,7 @@ public class PIDTuner {
         this.lastAbove = currentValue >= setpoint;
         this.minVal = currentValue;
         this.maxVal = currentValue;
-        
+
         cycleTimer.reset();
     }
 

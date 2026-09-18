@@ -31,10 +31,8 @@ public class LLLocator implements Subsystem {
         limelight.pipelineSwitch(0); // switch to right index for limelight
     }
 
-
     @Override
-    public void init() {
-    }
+    public void init() {}
 
     @Override
     public void update() {
@@ -47,14 +45,13 @@ public class LLLocator implements Subsystem {
             // TODO: implement math when accessible
             double B = ty + LL_A;
 
-            double dllpx = Math.tan(Math.PI/2 - B) * LL_H;
+            double dllpx = Math.tan(Math.PI / 2 - B) * LL_H;
             double dllpy = Math.tan(tx) * dllpx;
 
             headingError = tx;
 
             xRel = LL_DX + dllpx;
             yRel = LL_DY + dllpy;
-
         }
     }
 
@@ -70,8 +67,7 @@ public class LLLocator implements Subsystem {
         return new Pose(
                 robot.x() + (xRel - x_offset) * sin + (yRel - y_offset) * cos,
                 robot.y() + (xRel - x_offset) * cos + (yRel - y_offset) * sin,
-                robot.heading() + headingError
-        );
+                robot.heading() + headingError);
     }
 
     public Pose getPollenAbsolutePose(Pose robot) {

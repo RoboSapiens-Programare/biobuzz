@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.commands;
 
 import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.commands.Commands;
-
 import org.firstinspires.ftc.teamcode.robot.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Outtake;
 
@@ -57,5 +56,4 @@ public final class RobotCommands {
     public static Command idleIntake(Intake intake) {
         return Commands.instant(intake::idle).requiring(intake);
     }
-
 }

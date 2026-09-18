@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
 import org.firstinspires.ftc.teamcode.commands.RobotCommands;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 
@@ -75,8 +74,8 @@ public class OuttakeTesterOpMode extends RobotOpMode {
         telemetry.addData("Error", String.format("%.1f", target - current));
         telemetry.addData("At speed", atSpeed);
         telemetry.addLine();
-        telemetry.addLine("Auto cycle: IDLE(" + IDLE_SECONDS + "s) -> SPOOL(" + SPOOL_SECONDS
-                + "s) -> FIRE(" + FIRE_SECONDS + "s) -> STOP(" + STOP_FIRING_SECONDS + "s) -> repeat");
+        telemetry.addLine("Auto cycle: IDLE(" + IDLE_SECONDS + "s) -> SPOOL(" + SPOOL_SECONDS + "s) -> FIRE("
+                + FIRE_SECONDS + "s) -> STOP(" + STOP_FIRING_SECONDS + "s) -> repeat");
     }
 
     @Override
@@ -103,11 +102,16 @@ public class OuttakeTesterOpMode extends RobotOpMode {
 
     private double stepDuration(Step step) {
         switch (step) {
-            case IDLE: return IDLE_SECONDS;
-            case SPOOL: return SPOOL_SECONDS;
-            case FIRE: return FIRE_SECONDS;
-            case STOP_FIRING: return STOP_FIRING_SECONDS;
-            default: return 0;
+            case IDLE:
+                return IDLE_SECONDS;
+            case SPOOL:
+                return SPOOL_SECONDS;
+            case FIRE:
+                return FIRE_SECONDS;
+            case STOP_FIRING:
+                return STOP_FIRING_SECONDS;
+            default:
+                return 0;
         }
     }
 }

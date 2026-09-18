@@ -30,7 +30,8 @@ public class FFController {
         this(kP, kI, kD, kS, kV, kA, -1.0, 1.0);
     }
 
-    public FFController(double kP, double kI, double kD, double kS, double kV, double kA, double minOutput, double maxOutput) {
+    public FFController(
+            double kP, double kI, double kD, double kS, double kV, double kA, double minOutput, double maxOutput) {
         this.kP = kP;
         this.kI = kI;
         this.kD = kD;

@@ -1,13 +1,12 @@
 package org.firstinspires.ftc.teamcode.robot.fileTelemetry;
 
-import org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters.CsvFormatter;
-import org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters.Formatter;
-import org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters.JsonFormatter;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters.CsvFormatter;
+import org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters.Formatter;
+import org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters.JsonFormatter;
 
 /**
  * Writes telemetry snapshots to a file, serialized by a {@link Formatter}.
@@ -50,8 +49,8 @@ public class FileTelemetry {
                 fileName = "telemetry_" + System.currentTimeMillis() + formatter.getExtension();
                 break;
             case DATE_BASED:
-                String dateStr = new java.text.SimpleDateFormat("yyyy-MM-dd",
-                        java.util.Locale.getDefault()).format(new java.util.Date());
+                String dateStr = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                        .format(new java.util.Date());
                 fileName = "telemetry_" + dateStr + formatter.getExtension();
                 break;
             case OVERWRITE:
