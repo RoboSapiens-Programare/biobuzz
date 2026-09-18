@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import static org.firstinspires.ftc.teamcode.robot.Robot.follower;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.math.Pose;
@@ -12,22 +14,23 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.commands.RobotCommands;
-import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 
 import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
+//import dev.frozenmilk.dairy.pasteurized.Pasteurized;
 
 @TeleOp
 @Configurable
 public class TeleOP extends RobotOpMode {
+    TelemetryManager.TelemetryWrapper pTelemetry;
 
     private enum States {
         INTAKE,
         OUTTAKE
     };
 
-    private States state;
-
+    // Initialize state to avoid NullPointerException
+    private States state = States.INTAKE;
 
     private final ElapsedTime debounceTimer = new ElapsedTime();
 
@@ -48,16 +51,25 @@ public class TeleOP extends RobotOpMode {
         debounceTimer.reset();
     }
 
+    private void toggleState() {
+        if (state == States.INTAKE)
+            changeState(States.OUTTAKE);
+        else changeState(States.INTAKE);
+    }
+
     @Override
     protected void onInit() {
-        front_left = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "front_left"));
-        front_right = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "front_right"));
+        front_left = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel_left"));
+        front_right = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel_right"));
         rear_left = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "rear_left"));
         rear_right = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "rear_right"));
 
+        follower.setHeading(0);
+
+        // Set initial state actions safely on init
         changeState(States.INTAKE);
 
-        follower.setHeading(0);
+        pTelemetry = PanelsTelemetry.INSTANCE.getTelemetry().getWrapper();
     }
 
     @Override
@@ -76,6 +88,10 @@ public class TeleOP extends RobotOpMode {
 
         follower.manual(powers);
 
+        if (gamepad1.crossWasPressed()) {
+            toggleState();
+        }
+
         switch (state) {
             case INTAKE:
                 if (gamepad1.right_trigger_pressed) {
@@ -85,21 +101,13 @@ public class TeleOP extends RobotOpMode {
                 } else {
                     RobotCommands.idleIntake(robot.intake).schedule();
                 }
-
-                if (gamepad1.cross && debounceTimer.milliseconds() > 20) {
-                    changeState(States.OUTTAKE);
-                }
                 break;
 
             case OUTTAKE:
-                if (gamepad1.right_trigger_pressed) {
-                    RobotCommands.fireShooter(robot.outtake).schedule();
-                } else {
+                if (gamepad1.rightTriggerWasPressed()) {
+                    RobotCommands.fireShooter(robot.outtake, robot.intake).schedule();
+                } else if (gamepad1.rightTriggerWasReleased()){
                     RobotCommands.stopFiring(robot.outtake).schedule();
-                }
-
-                if (gamepad1.cross && debounceTimer.milliseconds() > 20) {
-                    changeState(States.INTAKE);
                 }
                 break;
         }
@@ -107,17 +115,18 @@ public class TeleOP extends RobotOpMode {
         Pose robotPose = follower.pose();
 
         // TELEMETRY
-        telemetry.addData("State", state);
-        telemetry.addData("Robot X", robotPose.x());
-        telemetry.addData("Robot Y", robotPose.y());
-        telemetry.addData("Robot Heading", Math.toDegrees(robotPose.heading()));
+        pTelemetry.addData("State", state);
+        pTelemetry.addData("Robot X", robotPose.x());
+        pTelemetry.addData("Robot Y", robotPose.y());
+        pTelemetry.addData("Robot Heading", Math.toDegrees(robotPose.heading()));
+        pTelemetry.addData("Flywheel Powers", front_left.getPower() + " | " + front_right.getPower());
+        pTelemetry.addData("Shooter speed", robot.outtake.getCurrentSpeed());
+        pTelemetry.addData("Shooter target", robot.outtake.getTarget());
+        pTelemetry.addData("Front left current", front_left.getCurrent(CurrentUnit.AMPS));
+        pTelemetry.addData("Front right current", front_right.getCurrent(CurrentUnit.AMPS));
+        pTelemetry.addData("Rear left current", rear_left.getCurrent(CurrentUnit.AMPS));
+        pTelemetry.addData("Rear right current", rear_right.getCurrent(CurrentUnit.AMPS));
 
-        telemetry.addData("Shooter speed", robot.outtake.getCurrentSpeed());
-        telemetry.addData("Shooter target", robot.outtake.getTarget());
-        telemetry.addData("Front left current", front_left.getCurrent(CurrentUnit.AMPS));
-        telemetry.addData("Front right current", front_right.getCurrent(CurrentUnit.AMPS));
-        telemetry.addData("Rear left current", rear_left.getCurrent(CurrentUnit.AMPS));
-        telemetry.addData("Rear right current", rear_right.getCurrent(CurrentUnit.AMPS));
-
+        pTelemetry.update();
     }
 }

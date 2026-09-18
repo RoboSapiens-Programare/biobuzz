@@ -5,8 +5,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.teamcode.utils.controlSystems.FFController;
-import org.firstinspires.ftc.teamcode.utils.controlSystems.PIDFController;
 
 import java.util.ArrayList;
 import java.util.List;

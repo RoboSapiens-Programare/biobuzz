@@ -53,7 +53,7 @@ public class OuttakeTesterOpMode extends RobotOpMode {
                     RobotCommands.spoolShooter(robot.outtake).schedule();
                     break;
                 case FIRE:
-                    RobotCommands.fireShooter(robot.outtake).schedule();
+                    RobotCommands.fireShooter(robot.outtake, robot.intake).schedule();
                     break;
                 case STOP_FIRING:
                     RobotCommands.stopFiring(robot.outtake).schedule();

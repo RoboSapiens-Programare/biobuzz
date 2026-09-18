@@ -3,10 +3,9 @@ package org.firstinspires.ftc.teamcode.opmodes.tuners;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.robot.Robot;
-import org.firstinspires.ftc.teamcode.utils.controlSystems.tuners.FFTuner;
+import org.firstinspires.ftc.teamcode.utils.ControlSystems.Tuners.FFTuner;
 
 import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 

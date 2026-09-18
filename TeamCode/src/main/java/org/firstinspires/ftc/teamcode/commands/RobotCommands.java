@@ -15,22 +15,32 @@ public final class RobotCommands {
 
     /** Spools the flywheel to shooting speed. */
     public static Command spoolShooter(Outtake outtake) {
-        return Commands.instant(outtake::spool).requiring(outtake);
+        return Commands.instant(outtake::stopIdling).requiring(outtake);
     }
 
     /** Returns the shooter to its idle velocity and stops firing. */
     public static Command idleShooter(Outtake outtake) {
-        return Commands.instant(outtake::unspool).requiring(outtake);
+        return Commands.instant(outtake::startIdling).requiring(outtake);
     }
 
     /** Opens the gate and pulls rollers. The flywheel is gated on speed in Outtake.update(). */
-    public static Command fireShooter(Outtake outtake) {
-        return Commands.instant(outtake::fire).requiring(outtake);
+    public static Command fireShooter(Outtake outtake, Intake intake) {
+        return Command.build()
+                .setStart(outtake::computeVelocity)
+                .setExecute(() -> {
+                    if (outtake.shootReady()) {
+                        intake.pullBalls();
+                        outtake.update();
+                    }
+                })
+                .setDone(() -> outtake.getBallCount() == 0)
+                .setEnd(endCondition -> outtake.startIdling())
+                .requiring(outtake, intake);
     }
 
     /** Closes the gate and stops the rollers. */
     public static Command stopFiring(Outtake outtake) {
-        return Commands.instant(outtake::stopFiring).requiring(outtake);
+        return Commands.instant(outtake::startIdling).requiring(outtake);
     }
 
     /** Pulls balls into the mechanism. */

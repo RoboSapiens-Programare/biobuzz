@@ -16,22 +16,23 @@ public class Outtake implements Subsystem {
 
     private final CachingServo gate;
 
+
     private final double GATE_OPEN = 0.5;
     private final double GATE_CLOSED = 0;
 
-    private boolean spooled = false;
+
     private boolean firing = false;
 
-    public Outtake(HardwareMap hwMap) {
-        flywheel.addMotor(hwMap.get(DcMotorEx.class, "flywheel_left"), true)
-                .addMotor(hwMap.get(DcMotorEx.class, "flywheel_right"), false)
-                .setEncoder(hwMap.get(DcMotorEx.class, "flywheel_left"))
-                .setPIDConstants(0.0002, 0.0024, 0.0000)
-                .setFFConstants(0.0046, 0.0004, 0.0000)
-                .setTolerance(40);
 
-        rollers.addMotor(hwMap.get(DcMotorEx.class, "roller_motor"))
-               .setPower(1);
+    public Outtake(HardwareMap hwMap) {
+        flywheel.addMotor(hwMap.get(DcMotorEx.class, "flywheel_left"), false)
+                .addMotor(hwMap.get(DcMotorEx.class, "flywheel_right"), true)
+                .setEncoder(hwMap.get(DcMotorEx.class, "flywheel_left"))
+                .setPIDConstants(0.0003, 0.0037, 0.0000)
+                .setFFConstants(0.0500, 0.0005, 0.0000)
+                .setTolerance(40)
+                .setIdlingPower(0.2);
+
 
         gate = new CachingServo(hwMap.get(Servo.class, "gate"));
     }
@@ -41,12 +42,12 @@ public class Outtake implements Subsystem {
 
     @Override
     public void update() {
-        if (firing && flywheel.velocityReached()) {
+        flywheel.update();
+
+        if (shootReady() && flywheel.mode == Flywheel.FlywheelMode.PRIMED) {
             gate.setPosition(GATE_OPEN);
-            rollers.pull();
         } else {
             gate.setPosition(GATE_CLOSED);
-            rollers.idle();
         }
     }
 
@@ -58,22 +59,25 @@ public class Outtake implements Subsystem {
         return flywheel.getCurrentVelocity();
     }
 
-
-    public void spool() {
-        spooled = true;
+    public int getBallCount() {
+        // Implement when sensors
+        return 0;
     }
 
-    public void unspool() {
-        spooled = false;
-        firing = false;
+    public void computeVelocity() {
+        flywheel.setTargetVelocity(800);
     }
 
-    public void fire() {
-        firing = true;
+    public boolean shootReady() {
+        return flywheel.velocityReached();
     }
 
-    public void stopFiring() {
-        firing = false;
+    public void startIdling() {
+        flywheel.mode = Flywheel.FlywheelMode.IDLING;
+    }
+
+    public void stopIdling() {
+        flywheel.mode = Flywheel.FlywheelMode.PRIMED;
     }
 
     @Override
@@ -81,7 +85,6 @@ public class Outtake implements Subsystem {
 
     @Override
     public void stop() {
-        spooled = false;
         firing = false;
         gate.setPosition(GATE_CLOSED);
         rollers.idle();

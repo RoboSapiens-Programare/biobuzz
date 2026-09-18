@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import org.firstinspires.ftc.teamcode.utils.controlSystems.FFController;
+import org.firstinspires.ftc.teamcode.utils.ControlSystems.FFController;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,8 +83,14 @@ public class Flywheel implements Mechanism {
     }
 
 
-    public void setTolerance(double tolerance) {
+    public Flywheel setTolerance(double tolerance) {
         ffController.setTolerance(tolerance);
+        return this;
+    }
+
+    public Flywheel setIdlingPower(double p) {
+        idlingPower = p;
+        return this;
     }
 
     @Override

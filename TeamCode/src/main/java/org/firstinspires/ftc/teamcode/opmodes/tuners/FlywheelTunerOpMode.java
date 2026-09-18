@@ -9,8 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Flywheel;
-import org.firstinspires.ftc.teamcode.opmodes.FlywheelConfig;
-import org.firstinspires.ftc.teamcode.utils.controlSystems.tuners.FFTuner;
+import org.firstinspires.ftc.teamcode.utils.ControlSystems.Tuners.FFTuner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +27,7 @@ import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
  * Stage 2 (PID_RELAY): runs a Ziegler-Nichols relay test on top of the identified feedforward,
  * fits kP / kI / kD.
  * Stage 3 (VERIFY): writes the tuned gains into FlywheelConfig + a Flywheel mechanism, spools at
- * FlywheelConfig.target and reports how close the flywheel actually holds.
+ * target and reports how close the flywheel actually holds.
  *
  * Press START to run.
  */
@@ -36,7 +35,9 @@ import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 public class FlywheelTunerOpMode extends OpMode {
 /** One entry per flywheel motor. The first entry is the velocity encoder. */
     private static final MotorSpec[] MOTORS = {
-            new MotorSpec("flywheel_left", false),
+        new MotorSpec("flywheel_left", false),
+
+        new MotorSpec("flywheel_right", true),
     };
 
     // FF ramp stage
@@ -64,6 +65,8 @@ public class FlywheelTunerOpMode extends OpMode {
     private final ElapsedTime verifyTimer = new ElapsedTime();
 
     private List<LynxModule> hubs;
+
+    private double target = 2000;
 
     @Override
     public void init() {
@@ -144,15 +147,9 @@ public class FlywheelTunerOpMode extends OpMode {
     }
 
     private void applyGainsAndStartVerify() {
-        FlywheelConfig.kp = tuner.kP;
-        FlywheelConfig.ki = tuner.kI;
-        FlywheelConfig.kd = tuner.kD;
-        FlywheelConfig.kS = tuner.kS;
-        FlywheelConfig.kV = tuner.kV;
-
         flywheel.setPIDConstants(tuner.kP, tuner.kI, tuner.kD);
         flywheel.setFFConstants(tuner.kS, tuner.kV, 0);
-        flywheel.setTargetVelocity(FlywheelConfig.target);
+        flywheel.setTargetVelocity(target);
 
         verifyActive = true;
         verifyTimer.reset();
@@ -161,13 +158,13 @@ public class FlywheelTunerOpMode extends OpMode {
     private void runVerify() {
         flywheel.update();
 
-        telemetry.addData("Verify target", FlywheelConfig.target);
-        telemetry.addData("Verify error", String.format("%.1f", FlywheelConfig.target - getVelocity()));
+        telemetry.addData("Verify target", target);
+        telemetry.addData("Verify error", String.format("%.1f", target - getVelocity()));
 
         if (verifyTimer.seconds() > VERIFY_TIMEOUT_SECONDS) {
-            telemetry.addLine(getVelocity() >= FlywheelConfig.target - 15
+            telemetry.addLine(getVelocity() >= target - 15
                     ? "HOLDS target to within tolerance."
-                    : "Does NOT reach target - lower FlywheelConfig.target or re-tune.");
+                    : "Does NOT reach target - lower target or re-tune.");
         }
     }
 

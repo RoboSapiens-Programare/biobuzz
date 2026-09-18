@@ -32,6 +32,11 @@ android {
 dependencies {
     implementation project(':FtcRobotController')
 
-    implementation "dev.frozenmilk.dairy:CachingHardware"
+    implementation "dev.frozenmilk.dairy:CachingHardware:1.0.0"
+//    implementation "dev.frozenmilk.dairy:Pasteurized:1.0.0"
+    // Must align with the resolved Sinister 2.3.0 + Sloth stack; 1.0.0 used the removed
+    // dev.frozenmilk.sinister.apphooks package and never hooks FeatureRegistrar into the event loop.
+//    implementation "dev.frozenmilk.dairy:Core:2.2.4"
+
     implementation "com.bylazar:configurables:1.0.5"
 }
