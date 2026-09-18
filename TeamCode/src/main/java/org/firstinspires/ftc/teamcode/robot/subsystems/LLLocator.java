@@ -59,7 +59,9 @@ public class LLLocator implements Subsystem {
     public void reset() {}
 
     @Override
-    public void stop() {}
+    public void stop() {
+        limelight.stop();
+    }
 
     public Pose getPollenAbsolutePose(double x_offset, double y_offset, Pose robot) {
         double sin = Math.sin(robot.heading());
@@ -81,5 +83,9 @@ public class LLLocator implements Subsystem {
 
     public Path buildPathToPollen(Pose robot) {
         return buildPathToPollen(0, 0, robot);
+    }
+
+    public double getHeadingError() {
+        return headingError;
     }
 }

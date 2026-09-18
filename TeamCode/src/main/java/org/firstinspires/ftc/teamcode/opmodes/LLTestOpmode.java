@@ -5,9 +5,11 @@ import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.robot.subsystems.LLLocator;
 
+@TeleOp(group = "Tests")
 public class LLTestOpmode extends OpMode {
     LLLocator llLocator;
     Follower follower;
@@ -33,10 +35,10 @@ public class LLTestOpmode extends OpMode {
         pTelemetry.addData("0. Pollen pose", pollen);
         pTelemetry.addData("1. Robot pose", robot);
         pTelemetry.addData("2. Distance", robot.distance(pollen));
-        pTelemetry.addData("3. Error angle", llLocator.)
-
+        pTelemetry.addData("3. Error angle", llLocator.getHeadingError());
 
         follower.update();
         llLocator.update();
+        pTelemetry.update();
     }
 }
