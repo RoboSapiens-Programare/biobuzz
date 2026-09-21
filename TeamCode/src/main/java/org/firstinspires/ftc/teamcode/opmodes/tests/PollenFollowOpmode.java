@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmodes;
+package org.firstinspires.ftc.teamcode.opmodes.tests;
 
 import static org.firstinspires.ftc.teamcode.robot.Robot.follower;
 
@@ -7,6 +7,8 @@ import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 import org.firstinspires.ftc.teamcode.robot.subsystems.LLLocator;
 

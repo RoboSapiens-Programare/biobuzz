@@ -17,6 +17,7 @@ public class Outtake implements Subsystem {
     private final Roller rollers = new Roller();
 
     private final CachingServo gate;
+    private final CachingServo hood;
     private final CachingDcMotorEx pivot;
     private final PIDFController pivotController = new PIDFController(0, 0, 0, 0);
     private Tracker tracker;
@@ -24,6 +25,9 @@ public class Outtake implements Subsystem {
 
     public static double GATE_OPEN = 0.5;
     public static double GATE_CLOSED = 0;
+
+    public static double HOOD_LOW = 0;
+    public static double HOOD_HIGH = 1;
 
     public Outtake(HardwareMap hwMap) {
         flywheel.addMotor(hwMap.get(DcMotorEx.class, "flywheel_left"), false)
@@ -36,11 +40,15 @@ public class Outtake implements Subsystem {
 
         gate = new CachingServo(hwMap.get(Servo.class, "gate"));
 
+        hood = new CachingServo(hwMap.get(Servo.class, "hood"));
+
         pivot = new CachingDcMotorEx(hwMap.get(DcMotorEx.class, "pivot"));
     }
 
     @Override
-    public void init() {}
+    public void init() {
+        hood.setPosition(HOOD_LOW);
+    }
 
     @Override
     public void update() {
@@ -52,8 +60,9 @@ public class Outtake implements Subsystem {
             gate.setPosition(GATE_CLOSED);
         }
 
-        if (tracker != null && tracker.isEnabled()) {
+        if (tracker != null && Tracker.isEnabled()) {
             aimAt(tracker.getTrackAngle());
+            setHood(tracker.getHood());
         }
 
         double pow = pivotController.update(pivot.getCurrentPosition());
@@ -76,6 +85,10 @@ public class Outtake implements Subsystem {
         flywheel.setTargetVelocity(800);
     }
 
+    public void setVelocity(double velocity) {
+        flywheel.setTargetVelocity(velocity);
+    }
+
     public boolean shootReady() {
         return flywheel.velocityReached();
     }
@@ -96,12 +109,17 @@ public class Outtake implements Subsystem {
         pivotController.setSetpoint(angleToTicks(angleRad));
     }
 
+    public void setHood(double position) {
+        hood.setPosition(Math.max(0, Math.min(1, position)));
+    }
+
     @Override
     public void reset() {}
 
     @Override
     public void stop() {
         gate.setPosition(GATE_CLOSED);
+        hood.setPosition(HOOD_LOW);
         rollers.idle();
         flywheel.stop();
     }

@@ -11,6 +11,7 @@ public class Tracker implements Subsystem {
     private static double periodSec = 0;
     private static double lastTrackAngle = 0;
     private static double lastVelocity = 0;
+    private static double lastHood = 0;
     private static boolean hasComputed = false;
     private static boolean enabled = true;
 
@@ -49,6 +50,10 @@ public class Tracker implements Subsystem {
         return lastVelocity;
     }
 
+    public double getHood() {
+        return lastHood;
+    }
+
     public void applySOTM() {
         if (sotmEnabled) {
             lastTrackAngle += sotmOffset;
@@ -56,6 +61,11 @@ public class Tracker implements Subsystem {
     }
 
     private double computeVelocity(double dist) {
+        // tune regression
+        return Math.pow(dist, 3) * 0 + Math.pow(dist, 2) * 0 + dist * 0 + 0;
+    }
+
+    private double computeHood(double dist) {
         // tune regression
         return Math.pow(dist, 3) * 0 + Math.pow(dist, 2) * 0 + dist * 0 + 0;
     }
@@ -74,7 +84,9 @@ public class Tracker implements Subsystem {
             lastTrackAngle =
                     Math.atan2(trackPose.x() - robotPose.x(), trackPose.y() - robotPose.y()) - robotPose.heading();
 
-            lastVelocity = computeVelocity(robotPose.distance(trackPose));
+            double dist = robotPose.distance(trackPose);
+            lastVelocity = computeVelocity(dist);
+            lastHood = computeHood(dist);
             hasComputed = true;
             timer.reset();
         }

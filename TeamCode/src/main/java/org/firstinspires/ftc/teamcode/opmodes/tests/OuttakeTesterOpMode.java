@@ -1,12 +1,14 @@
-package org.firstinspires.ftc.teamcode.opmodes;
+package org.firstinspires.ftc.teamcode.opmodes.tests;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.commands.RobotCommands;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 
-@TeleOp(name = "Outtake Auto Test", group = "Test")
+@Disabled
+@TeleOp(name = "Outtake Auto Test", group = "Tests")
 @Configurable
 public class OuttakeTesterOpMode extends RobotOpMode {
 
