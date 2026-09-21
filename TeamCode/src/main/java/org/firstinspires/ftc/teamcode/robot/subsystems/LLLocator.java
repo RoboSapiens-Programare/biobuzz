@@ -13,15 +13,17 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 public class LLLocator implements Subsystem {
     private final Limelight3A limelight;
 
-    public static double LL_H = 0;
-    public static double LL_DX = 0;
+    public static double LL_H = 4.4957;
+    public static double LL_DX = -7.086614;
     public static double LL_DY = 0;
-    public static double LL_A = Math.toRadians(0);
+    public static double LL_A = Math.toRadians(10);
 
     private double xRel = 0;
     private double yRel = 0;
 
     private double headingError = 0;
+
+    private boolean hasValidTarget = false;
 
     public LLLocator(HardwareMap hwMap) {
         limelight = hwMap.get(Limelight3A.class, "limelight");
@@ -40,9 +42,8 @@ public class LLLocator implements Subsystem {
 
         if (result != null && result.isValid()) {
             double tx = Math.toRadians(result.getTx()); // How far left or right the target is (radians)
-            double ty = Math.toRadians(result.getTy()); // How far up or down the target is (radians)
+            double ty = -Math.toRadians(result.getTy()); // How far up or down the target is (radians)
 
-            // TODO: implement math when accessible
             double B = ty + LL_A;
 
             double dllpx = Math.tan(Math.PI / 2 - B) * LL_H;
@@ -52,7 +53,27 @@ public class LLLocator implements Subsystem {
 
             xRel = LL_DX + dllpx;
             yRel = LL_DY + dllpy;
+
+            hasValidTarget = true;
+        } else {
+            hasValidTarget = false;
         }
+    }
+
+    public boolean hasValidTarget() {
+        return hasValidTarget;
+    }
+
+    public LLResult getLatestResult() {
+        return limelight.getLatestResult();
+    }
+
+    public boolean isConnected() {
+        return limelight.isConnected();
+    }
+
+    public long getTimeSinceLastUpdate() {
+        return limelight.getTimeSinceLastUpdate();
     }
 
     @Override
@@ -66,10 +87,11 @@ public class LLLocator implements Subsystem {
     public Pose getPollenAbsolutePose(double x_offset, double y_offset, Pose robot) {
         double sin = Math.sin(robot.heading());
         double cos = Math.cos(robot.heading());
-        return new Pose(
-                robot.x() + (xRel - x_offset) * sin + (yRel - y_offset) * cos,
-                robot.y() + (xRel - x_offset) * cos + (yRel - y_offset) * sin,
-                robot.heading() + headingError);
+
+        double x = robot.x() + (xRel - x_offset) * cos + (yRel - y_offset) * sin;
+        double y = robot.y() + (xRel - x_offset) * sin - (yRel - y_offset) * cos;
+
+        return new Pose(x, y, Math.atan2(y - robot.y(), x - robot.x()));
     }
 
     public Pose getPollenAbsolutePose(Pose robot) {

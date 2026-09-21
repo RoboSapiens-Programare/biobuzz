@@ -32,7 +32,7 @@ public final class RobotCommands {
                         outtake.update();
                     }
                 })
-                .setDone(() -> outtake.getBallCount() == 0)
+                .setDone(() -> intake.getBallCount() == 0)
                 .setEnd(endCondition -> outtake.startIdling())
                 .requiring(outtake, intake);
     }

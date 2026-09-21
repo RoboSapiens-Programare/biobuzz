@@ -1,23 +1,29 @@
 package org.firstinspires.ftc.teamcode.robot.subsystems;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 import dev.frozenmilk.dairy.cachinghardware.CachingServo;
 import org.firstinspires.ftc.teamcode.mechanisms.Flywheel;
 import org.firstinspires.ftc.teamcode.mechanisms.Roller;
+import org.firstinspires.ftc.teamcode.utils.ControlSystems.PIDFController;
 
+@Configurable
 public class Outtake implements Subsystem {
 
     private final Flywheel flywheel = new Flywheel();
     private final Roller rollers = new Roller();
 
     private final CachingServo gate;
+    private final CachingDcMotorEx pivot;
+    private final PIDFController pivotController = new PIDFController(0, 0, 0, 0);
+    private Tracker tracker;
+    public static int CORRESPONDING_180_CLOCKWISE_TICKS = 0;
 
-    private final double GATE_OPEN = 0.5;
-    private final double GATE_CLOSED = 0;
-
-    private boolean firing = false;
+    public static double GATE_OPEN = 0.5;
+    public static double GATE_CLOSED = 0;
 
     public Outtake(HardwareMap hwMap) {
         flywheel.addMotor(hwMap.get(DcMotorEx.class, "flywheel_left"), false)
@@ -29,6 +35,8 @@ public class Outtake implements Subsystem {
                 .setIdlingPower(0.2);
 
         gate = new CachingServo(hwMap.get(Servo.class, "gate"));
+
+        pivot = new CachingDcMotorEx(hwMap.get(DcMotorEx.class, "pivot"));
     }
 
     @Override
@@ -43,6 +51,17 @@ public class Outtake implements Subsystem {
         } else {
             gate.setPosition(GATE_CLOSED);
         }
+
+        if (tracker != null && tracker.isEnabled()) {
+            aimAt(tracker.getTrackAngle());
+        }
+
+        double pow = pivotController.update(pivot.getCurrentPosition());
+        pivot.setPower(pow);
+    }
+
+    public void setTracker(Tracker tracker) {
+        this.tracker = tracker;
     }
 
     public double getTarget() {
@@ -51,11 +70,6 @@ public class Outtake implements Subsystem {
 
     public double getCurrentSpeed() {
         return flywheel.getCurrentVelocity();
-    }
-
-    public int getBallCount() {
-        // Implement when sensors
-        return 0;
     }
 
     public void computeVelocity() {
@@ -74,12 +88,19 @@ public class Outtake implements Subsystem {
         flywheel.mode = Flywheel.FlywheelMode.PRIMED;
     }
 
+    private int angleToTicks(double rad) {
+        return Math.toIntExact(Math.round((-rad / Math.PI) * CORRESPONDING_180_CLOCKWISE_TICKS));
+    }
+
+    public void aimAt(double angleRad) {
+        pivotController.setSetpoint(angleToTicks(angleRad));
+    }
+
     @Override
     public void reset() {}
 
     @Override
     public void stop() {
-        firing = false;
         gate.setPosition(GATE_CLOSED);
         rollers.idle();
         flywheel.stop();

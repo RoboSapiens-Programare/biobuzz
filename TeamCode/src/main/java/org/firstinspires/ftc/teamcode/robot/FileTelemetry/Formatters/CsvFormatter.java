@@ -1,9 +1,9 @@
-package org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters;
+package org.firstinspires.ftc.teamcode.robot.FileTelemetry.Formatters;
 
 import java.util.StringJoiner;
 
 /** Formats telemetry rows as comma-separated values, one row per snapshot. */
-public class CsvFormatter extends Formatter {
+public class CsvFormatter extends org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters.Formatter {
 
     @Override
     public String formatHeader() {

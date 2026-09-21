@@ -129,3 +129,6 @@ Note: Some names start with "Team" and others start with "team".  This is intent
 5)  Add:    include ':Team0417' to the "/settings.gradle" file.
     
 6)  Open up Android Studios and clean out any old files by using the menu to "Build/Clean Project""
+
+
+{"name":"Default","navlets":[{"pluginID":"com.bylazar.battery","navletID":"Battery"}],"widgets":[{"x":0,"y":0,"w":5,"h":7,"widgets":[{"pluginID":"com.bylazar.limelightproxy","widgetID":"CameraStream"}]},{"x":5,"y":0,"w":3,"h":4,"widgets":[{"pluginID":"com.bylazar.opmodecontrol","widgetID":"OpModes Control"}]},{"x":8,"y":0,"w":3,"h":4,"widgets":[{"pluginID":"com.bylazar.limelightproxy","widgetID":"Stats"}]},{"x":5,"y":4,"w":6,"h":8,"widgets":[{"pluginID":"com.bylazar.telemetry","widgetID":"Telemetry"}]},{"x":0,"y":7,"w":5,"h":5,"widgets":[{"pluginID":"com.bylazar.capture","widgetID":"Capture"}]},{"x":11,"y":0,"w":5,"h":5,"widgets":[{"pluginID":"com.bylazar.configurables","widgetID":"Configurables"}]},{"x":11,"y":5,"w":5,"h":7,"widgets":[{"pluginID":"com.bylazar.graph","widgetID":"Graph"}]}]}

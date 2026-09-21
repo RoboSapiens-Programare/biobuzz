@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters;
+package org.firstinspires.ftc.teamcode.robot.FileTelemetry.Formatters;
 
 import com.google.gson.Gson;
 import java.util.LinkedHashMap;
@@ -9,7 +9,7 @@ import java.util.Map;
  * Values keep their runtime type, so numbers stay numbers, booleans stay booleans and
  * enums serialize as their name (e.g. "SPOOLING").
  */
-public class JsonFormatter extends Formatter {
+public class JsonFormatter extends org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters.Formatter {
     private final Gson gson = new Gson();
 
     @Override

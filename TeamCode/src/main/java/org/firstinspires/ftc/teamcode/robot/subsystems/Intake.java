@@ -28,6 +28,10 @@ public class Intake implements Subsystem {
         rollerOne.idle();
     }
 
+    public int getBallCount() {
+        return 0;
+    }
+
     @Override
     public void init() {}
 

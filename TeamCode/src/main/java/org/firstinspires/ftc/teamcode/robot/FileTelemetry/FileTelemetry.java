@@ -1,12 +1,12 @@
-package org.firstinspires.ftc.teamcode.robot.fileTelemetry;
+package org.firstinspires.ftc.teamcode.robot.FileTelemetry;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters.CsvFormatter;
+import org.firstinspires.ftc.teamcode.robot.FileTelemetry.Formatters.CsvFormatter;
+import org.firstinspires.ftc.teamcode.robot.FileTelemetry.Formatters.JsonFormatter;
 import org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters.Formatter;
-import org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters.JsonFormatter;
 
 /**
  * Writes telemetry snapshots to a file, serialized by a {@link Formatter}.
