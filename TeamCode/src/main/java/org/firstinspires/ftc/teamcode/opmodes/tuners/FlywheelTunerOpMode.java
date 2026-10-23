@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes.tuners;
 
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -29,13 +31,13 @@ import org.firstinspires.ftc.teamcode.utils.ControlSystems.Tuners.FFTuner;
  *
  * Press START to run.
  */
-
-@Disabled
+//@Disabled
 @TeleOp(name = "Flywheel Tuner", group = "Tuners")
 public class FlywheelTunerOpMode extends OpMode {
     /** One entry per flywheel motor. The first entry is the velocity encoder. */
+    protected TelemetryManager.TelemetryWrapper telemetry;
     private static final MotorSpec[] MOTORS = {
-        new MotorSpec("flywheel_left", false), new MotorSpec("flywheel_right", true),
+            new MotorSpec("flywheel", true),
     };
 
     // FF ramp stage
@@ -68,6 +70,8 @@ public class FlywheelTunerOpMode extends OpMode {
 
     @Override
     public void init() {
+        telemetry = PanelsTelemetry.INSTANCE.getTelemetry().getWrapper();
+
         if (MOTORS.length == 0) {
             throw new IllegalStateException("Configure at least one motor in MOTORS[]");
         }
@@ -145,6 +149,8 @@ public class FlywheelTunerOpMode extends OpMode {
             telemetry.addData("kV", String.format("%.4f", tuner.kV));
             telemetry.addLine("Written to FlywheelConfig for TeleOP.");
         }
+
+        telemetry.update();
     }
 
     @Override

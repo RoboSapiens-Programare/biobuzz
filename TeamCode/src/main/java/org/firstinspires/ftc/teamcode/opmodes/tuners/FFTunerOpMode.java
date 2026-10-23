@@ -20,12 +20,10 @@ import org.firstinspires.ftc.teamcode.utils.ControlSystems.Tuners.FFTuner;
  *
  * Press START to run.
  */
-
 @Disabled
 @TeleOp(name = "FF + PID Tuner", group = "Tuners")
 public class FFTunerOpMode extends OpMode {
-    private static final String MOTOR_NAME = "flywheel_left";
-    private static final String MOTOR_NAME_2 = "flywheel_right";
+    private static final String MOTOR_NAME = "flywheel";
     private static final double MAX_POWER = 0.8;
     private static final double POWER_STEP = 0.05;
     private static final double STEADY_STATE_TIME = 0.6;

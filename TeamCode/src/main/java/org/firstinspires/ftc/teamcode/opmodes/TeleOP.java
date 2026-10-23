@@ -10,6 +10,7 @@ import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 // import dev.frozenmilk.dairy.pasteurized.Pasteurized;
@@ -20,7 +21,6 @@ import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 @TeleOp
 @Configurable
 public class TeleOP extends RobotOpMode {
-    TelemetryManager.TelemetryWrapper pTelemetry;
 
     private enum States {
         INTAKE,
@@ -32,7 +32,8 @@ public class TeleOP extends RobotOpMode {
 
     private final ElapsedTime debounceTimer = new ElapsedTime();
 
-    private CachingDcMotorEx front_left, front_right, rear_left, rear_right;
+    private CachingDcMotorEx front_left, front_right, rear_left, rear_right, roller, flywheel;
+    private VoltageSensor myExpansionHubVoltageSensor;
 
     private void changeState(States newState) {
         state = newState;
@@ -56,17 +57,19 @@ public class TeleOP extends RobotOpMode {
 
     @Override
     protected void onInit() {
-        front_left = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel_left"));
-        front_right = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel_right"));
+        front_left = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "front_left"));
+        front_right = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "front_right"));
         rear_left = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "rear_left"));
         rear_right = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "rear_right"));
+        roller = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "roller_motor"));
+        flywheel = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel"));
+
+        myExpansionHubVoltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
 
         follower.setHeading(0);
 
         // Set initial state actions safely on init
         changeState(States.INTAKE);
-
-        pTelemetry = PanelsTelemetry.INSTANCE.getTelemetry().getWrapper();
     }
 
     @Override
@@ -110,6 +113,31 @@ public class TeleOP extends RobotOpMode {
 
         Pose robotPose = follower.pose();
 
+        // Constants from the 6000 RPM goBILDA datasheet @ 12V
+        final double BASE_OMEGA_FREE = 6000.0;
+        final double BASE_ISTALL = 9.2;
+        final double BASE_INOLOAD = 0.25;
+
+// Read live battery voltage from the Control Hub
+        double vActual = myExpansionHubVoltageSensor.getVoltage();
+        double vNominal = 12.0;
+
+// Step 1: Scale constants to live voltage
+        double vRatio = vActual / vNominal;
+        double omegaFreeAdj = BASE_OMEGA_FREE * vRatio;
+        double iStallAdj = BASE_ISTALL * vRatio;
+        double iNoLoadAdj = BASE_INOLOAD * vRatio; // (Or use your measured live I_no_load)
+
+// Step 2: Read current sensor from your intake motor
+        double iMeasured = roller.getCurrent(CurrentUnit.AMPS);
+
+// Step 3: Calculate safe RPM limit with 2x safety factor
+        double omegaLimit = omegaFreeAdj * (1.0 - (2.0 * (iMeasured - iNoLoadAdj)) / iStallAdj);
+
+// Ensure limit doesn't drop below zero
+        omegaLimit = Math.max(0.0, omegaLimit);
+
+// Compare your actual output RPM against omegaLimit (accounting for your gearbox ratio)
         // TELEMETRY
         pTelemetry.addData("State", state);
         pTelemetry.addData("Robot X", robotPose.x());
@@ -122,6 +150,10 @@ public class TeleOP extends RobotOpMode {
         pTelemetry.addData("Front right current", front_right.getCurrent(CurrentUnit.AMPS));
         pTelemetry.addData("Rear left current", rear_left.getCurrent(CurrentUnit.AMPS));
         pTelemetry.addData("Rear right current", rear_right.getCurrent(CurrentUnit.AMPS));
+        pTelemetry.addData("Roller current", roller.getCurrent(CurrentUnit.AMPS));
+        pTelemetry.addData("Omega Limit", omegaLimit);
+        pTelemetry.addData("Current flywheel", flywheel.getCurrent(CurrentUnit.AMPS));
+        pTelemetry.addData("INTAKE MAX CURRENT", this.robot.intake.getMaxCurrent());
 
         pTelemetry.update();
     }

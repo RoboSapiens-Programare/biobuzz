@@ -1,13 +1,12 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.commands.RobotCommands;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 
-@Disabled
+// @Disabled
 @TeleOp(name = "Outtake Auto Test", group = "Tests")
 @Configurable
 public class OuttakeTesterOpMode extends RobotOpMode {
@@ -22,8 +21,8 @@ public class OuttakeTesterOpMode extends RobotOpMode {
     private static final double AT_SPEED_TOLERANCE = 15;
 
     private static final double IDLE_SECONDS = 3;
-    private static final double SPOOL_SECONDS = 6;
-    private static final double FIRE_SECONDS = 3;
+    private static final double SPOOL_SECONDS = 2;
+    private static final double FIRE_SECONDS = 8;
     private static final double STOP_FIRING_SECONDS = 2;
 
     private final ElapsedTime runTimer = new ElapsedTime();

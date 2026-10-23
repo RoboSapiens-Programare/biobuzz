@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.utils.ControlSystems.Tuners.PIDTuner;
  */
 @TeleOp(name = "PIDTuner", group = "Tuners")
 public class PIDTunerOpMode extends OpMode {
-    private static final String MOTOR_NAME = "flywheel_left";
+    private static final String MOTOR_NAME = "flywheel";
     private static final double VELOCITY_SETPOINT = 1000;
     private static final double RELAY_POWER = 0.5;
     private static final int CYCLES = 6;
@@ -29,8 +29,6 @@ public class PIDTunerOpMode extends OpMode {
     @Override
     public void init() {
         motor = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, MOTOR_NAME));
-        //        motor2 = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel_right"));
-        //        motor2.setDirection(DcMotorSimple.Direction.REVERSE);
         tuner = new PIDTuner(VELOCITY_SETPOINT, RELAY_POWER, CYCLES);
     }
 

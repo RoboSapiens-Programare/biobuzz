@@ -29,12 +29,19 @@ public class Outtake implements Subsystem {
     public static double HOOD_LOW = 0;
     public static double HOOD_HIGH = 1;
 
+    public static double velocity = 0;
+
+    public static double kP = 0.0172;
+    public static double kI = 0.4035;
+    public static double kD = 0.0002;
+    public static double kS = 0.0133;
+    public static double kV = 0.0004;
+
     public Outtake(HardwareMap hwMap) {
-        flywheel.addMotor(hwMap.get(DcMotorEx.class, "flywheel_left"), false)
-                .addMotor(hwMap.get(DcMotorEx.class, "flywheel_right"), true)
-                .setEncoder(hwMap.get(DcMotorEx.class, "flywheel_left"))
-                .setPIDConstants(0.0003, 0.0037, 0.0000)
-                .setFFConstants(0.0500, 0.0005, 0.0000)
+        flywheel.addMotor(hwMap.get(DcMotorEx.class, "flywheel"), false)
+                .setEncoder(hwMap.get(DcMotorEx.class, "flywheel"))
+                .setPIDConstants(kP, kI, kD)
+                .setFFConstants(kS, kV, 0)
                 .setTolerance(40)
                 .setIdlingPower(0.2);
 
@@ -52,6 +59,8 @@ public class Outtake implements Subsystem {
 
     @Override
     public void update() {
+        flywheel.setPIDConstants(kP, kI, kD);
+        flywheel.setFFConstants(kS, kV, 0);
         flywheel.update();
 
         if (shootReady() && flywheel.mode == Flywheel.FlywheelMode.PRIMED) {
@@ -82,7 +91,7 @@ public class Outtake implements Subsystem {
     }
 
     public void computeVelocity() {
-        flywheel.setTargetVelocity(800);
+        flywheel.setTargetVelocity(velocity);
     }
 
     public void setVelocity(double velocity) {

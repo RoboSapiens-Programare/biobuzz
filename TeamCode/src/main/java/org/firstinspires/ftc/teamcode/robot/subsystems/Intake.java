@@ -8,10 +8,14 @@ import org.firstinspires.ftc.teamcode.mechanisms.Roller;
 @Configurable
 public class Intake implements Subsystem {
     private final Roller rollerOne = new Roller();
+    public static boolean useDoubleMotorSetup = false;
 
     public Intake(HardwareMap hwMap) {
         // Example usages
         rollerOne.addMotor(hwMap.get(DcMotorEx.class, "roller_motor"), true);
+        if (useDoubleMotorSetup) {
+            rollerOne.addMotor(hwMap.get(DcMotorEx.class, "roller_motor_2"), true);
+        }
 
         rollerOne.setPower(0.72);
     }
@@ -46,5 +50,9 @@ public class Intake implements Subsystem {
     @Override
     public void stop() {
         idle();
+    }
+
+    public double getMaxCurrent() {
+        return rollerOne.getMaxCurrent();
     }
 }
