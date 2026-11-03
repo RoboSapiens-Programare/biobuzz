@@ -39,7 +39,7 @@ dependencies {
     // dev.frozenmilk.sinister.apphooks package and never hooks FeatureRegistrar into the event loop.
     //    implementation "dev.frozenmilk.dairy:Core:2.2.4"
 
-    implementation "com.bylazar:limelightproxy:1.0.4"
+    implementation "com.bylazar:limelightproxy:1.0.6"
 
     implementation "com.bylazar:configurables:1.0.5"
 }

@@ -1,19 +1,21 @@
 package org.firstinspires.ftc.teamcode.robot.subsystems;
 
 import com.pedropathing.math.Pose;
+import com.pedropathing.utils.Angle;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.teamcode.robot.HivePoses;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
 public class Tracker implements Subsystem {
-    public static Pose trackPose = new Pose(0, 0);
+    private static Pose trackPose = new Pose(0, 0);
 
     private static final ElapsedTime timer = new ElapsedTime();
     private static double periodSec = 0;
     private static double lastTrackAngle = 0;
     private static double lastVelocity = 0;
-    private static double lastHood = 0;
     private static boolean hasComputed = false;
-    private static boolean enabled = true;
+    private static boolean enabled = false;
+    private static final double SHOOTER_CENTER_OFFSET = Math.PI; // turret zero points at robot rear
 
     private static boolean sotmEnabled = true;
     private static double sotmOffset = 0;
@@ -28,6 +30,33 @@ public class Tracker implements Subsystem {
 
     public static boolean isEnabled() {
         return enabled;
+    }
+
+    public static Pose getTrackPose() {
+        return trackPose;
+    }
+
+    public static void setTrackPose(Pose target) {
+        if (target == null) {
+            return;
+        }
+        if (trackPose.x() == target.x() && trackPose.y() == target.y()) {
+            return;
+        }
+        trackPose = target;
+        hasComputed = false;
+    }
+
+    public static void setTrackPose(double x, double y) {
+        setTrackPose(new Pose(x, y));
+    }
+
+    private static Pose selectTrackPose(Pose robotPose) {
+        boolean audienceSide = robotPose.y() < HivePoses.FIELD_CENTER;
+        if (Robot.alliance == Robot.Alliance.RED) {
+            return audienceSide ? HivePoses.RED_AUDIENCE : HivePoses.RED_FAR;
+        }
+        return audienceSide ? HivePoses.BLUE_AUDIENCE : HivePoses.BLUE_FAR;
     }
 
     public static void setSOTM(double offset) {
@@ -50,22 +79,7 @@ public class Tracker implements Subsystem {
         return lastVelocity;
     }
 
-    public double getHood() {
-        return lastHood;
-    }
-
-    public void applySOTM() {
-        if (sotmEnabled) {
-            lastTrackAngle += sotmOffset;
-        }
-    }
-
     private double computeVelocity(double dist) {
-        // tune regression
-        return Math.pow(dist, 3) * 0 + Math.pow(dist, 2) * 0 + dist * 0 + 0;
-    }
-
-    private double computeHood(double dist) {
         // tune regression
         return Math.pow(dist, 3) * 0 + Math.pow(dist, 2) * 0 + dist * 0 + 0;
     }
@@ -79,17 +93,27 @@ public class Tracker implements Subsystem {
             return;
         }
 
-        if (!hasComputed || (periodSec > 0 && timer.seconds() >= periodSec)) {
-            Pose robotPose = Robot.follower.pose();
-            lastTrackAngle =
-                    Math.atan2(trackPose.x() - robotPose.x(), trackPose.y() - robotPose.y()) - robotPose.heading();
+        Pose robotPose = Robot.follower.pose();
+        setTrackPose(selectTrackPose(robotPose));
 
-            double dist = robotPose.distance(trackPose);
-            lastVelocity = computeVelocity(dist);
-            lastHood = computeHood(dist);
-            hasComputed = true;
-            timer.reset();
+        if (hasComputed && periodSec > 0 && timer.seconds() < periodSec) {
+            return;
         }
+
+        double dx = trackPose.x() - robotPose.x();
+        double dy = trackPose.y() - robotPose.y();
+
+        double bearing = Angle.normalizeSigned(Math.atan2(dy, dx) - robotPose.heading());
+        double angle = Angle.normalizeSigned(SHOOTER_CENTER_OFFSET - bearing);
+        if (sotmEnabled) {
+            angle = Angle.normalizeSigned(angle + sotmOffset);
+        }
+        lastTrackAngle = angle;
+
+        double dist = robotPose.distance(trackPose);
+        lastVelocity = computeVelocity(dist);
+        hasComputed = true;
+        timer.reset();
     }
 
     @Override

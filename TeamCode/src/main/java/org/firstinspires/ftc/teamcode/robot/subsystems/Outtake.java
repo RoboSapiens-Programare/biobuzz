@@ -4,11 +4,9 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
-import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 import dev.frozenmilk.dairy.cachinghardware.CachingServo;
 import org.firstinspires.ftc.teamcode.mechanisms.Flywheel;
 import org.firstinspires.ftc.teamcode.mechanisms.Roller;
-import org.firstinspires.ftc.teamcode.utils.ControlSystems.PIDFController;
 
 @Configurable
 public class Outtake implements Subsystem {
@@ -17,28 +15,27 @@ public class Outtake implements Subsystem {
     private final Roller rollers = new Roller();
 
     private final CachingServo gate;
-    private final CachingServo hood;
-    private final CachingDcMotorEx pivot;
-    private final PIDFController pivotController = new PIDFController(0, 0, 0, 0);
+    private final CachingServo pivot_left, pivot_right;
+    public static final double PIVOT_RANGE = Math.toRadians((double) (360 * 3) / 4);
+    public static double aimOffset = Math.toRadians(0);
+
     private Tracker tracker;
-    public static int CORRESPONDING_180_CLOCKWISE_TICKS = 0;
 
     public static double GATE_OPEN = 0.5;
     public static double GATE_CLOSED = 0;
 
-    public static double HOOD_LOW = 0;
-    public static double HOOD_HIGH = 1;
-
     public static double velocity = 0;
 
     public static double kP = 0.0172;
-    public static double kI = 0.4035;
-    public static double kD = 0.0002;
-    public static double kS = 0.0133;
+    public static double kI = 0.1707;
+    public static double kD = 0.0004;
+    public static double kS = 0.0199;
     public static double kV = 0.0004;
 
+    public double pos = 0;
+
     public Outtake(HardwareMap hwMap) {
-        flywheel.addMotor(hwMap.get(DcMotorEx.class, "flywheel"), false)
+        flywheel.addMotor(hwMap.get(DcMotorEx.class, "flywheel"), true)
                 .setEncoder(hwMap.get(DcMotorEx.class, "flywheel"))
                 .setPIDConstants(kP, kI, kD)
                 .setFFConstants(kS, kV, 0)
@@ -47,14 +44,14 @@ public class Outtake implements Subsystem {
 
         gate = new CachingServo(hwMap.get(Servo.class, "gate"));
 
-        hood = new CachingServo(hwMap.get(Servo.class, "hood"));
+        pivot_left = new CachingServo(hwMap.get(Servo.class, "pivot_left"));
 
-        pivot = new CachingDcMotorEx(hwMap.get(DcMotorEx.class, "pivot"));
+        pivot_right = new CachingServo(hwMap.get(Servo.class, "pivot_right"));
     }
 
     @Override
     public void init() {
-        hood.setPosition(HOOD_LOW);
+        aimAt(0);
     }
 
     @Override
@@ -71,11 +68,7 @@ public class Outtake implements Subsystem {
 
         if (tracker != null && Tracker.isEnabled()) {
             aimAt(tracker.getTrackAngle());
-            setHood(tracker.getHood());
         }
-
-        double pow = pivotController.update(pivot.getCurrentPosition());
-        pivot.setPower(pow);
     }
 
     public void setTracker(Tracker tracker) {
@@ -110,16 +103,18 @@ public class Outtake implements Subsystem {
         flywheel.mode = Flywheel.FlywheelMode.PRIMED;
     }
 
-    private int angleToTicks(double rad) {
-        return Math.toIntExact(Math.round((-rad / Math.PI) * CORRESPONDING_180_CLOCKWISE_TICKS));
+    private double angleToPosition(double rad) {
+        rad = Math.max(Math.min(rad, PIVOT_RANGE / 2), -PIVOT_RANGE / 2); // clip
+        rad += PIVOT_RANGE / 2;
+        rad += aimOffset;
+        return Math.max(0, Math.min(1, rad / PIVOT_RANGE));
     }
 
     public void aimAt(double angleRad) {
-        pivotController.setSetpoint(angleToTicks(angleRad));
-    }
 
-    public void setHood(double position) {
-        hood.setPosition(Math.max(0, Math.min(1, position)));
+        pos = angleToPosition(angleRad);
+        pivot_left.setPosition(pos);
+        pivot_right.setPosition(pos);
     }
 
     @Override
@@ -128,7 +123,6 @@ public class Outtake implements Subsystem {
     @Override
     public void stop() {
         gate.setPosition(GATE_CLOSED);
-        hood.setPosition(HOOD_LOW);
         rollers.idle();
         flywheel.stop();
     }

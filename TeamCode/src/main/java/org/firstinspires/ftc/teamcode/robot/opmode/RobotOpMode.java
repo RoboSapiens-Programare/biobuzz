@@ -1,10 +1,11 @@
 package org.firstinspires.ftc.teamcode.robot.opmode;
 
 import com.bylazar.telemetry.PanelsTelemetry;
-import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.ivy.Scheduler;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.robot.Robot;
+import org.firstinspires.ftc.teamcode.utils.FrequencyMonitor;
 
 /**
  * Base class for every OpMode. Wires up the Robot and the Ivy Scheduler so concrete
@@ -21,7 +22,9 @@ import org.firstinspires.ftc.teamcode.robot.Robot;
  */
 public abstract class RobotOpMode extends OpMode {
     protected Robot robot;
-    protected TelemetryManager.TelemetryWrapper pTelemetry;
+    protected Telemetry pTelemetry;
+    protected boolean panelsTelemetry = true;
+    protected final FrequencyMonitor frequencyMonitor = new FrequencyMonitor();
 
     /** Called once in init(). Override for setup. */
     protected void onInit() {}
@@ -40,7 +43,7 @@ public abstract class RobotOpMode extends OpMode {
 
     @Override
     public final void init() {
-        pTelemetry = PanelsTelemetry.INSTANCE.getTelemetry().getWrapper();
+        pTelemetry = panelsTelemetry ? PanelsTelemetry.INSTANCE.getTelemetry().getWrapper() : telemetry;
 
         // IvY's scheduler is static, so clear anything carried over from a previous OpMode.
         Scheduler.reset();
@@ -63,6 +66,8 @@ public abstract class RobotOpMode extends OpMode {
 
     @Override
     public final void loop() {
+        frequencyMonitor.update();
+
         Robot.resetCache();
 
         onUpdate();
@@ -70,8 +75,22 @@ public abstract class RobotOpMode extends OpMode {
         Scheduler.execute();
 
         robot.update();
+
+        addLoopTelemetry(telemetry);
+        if (pTelemetry != telemetry) {
+            addLoopTelemetry(pTelemetry);
+        }
+
         telemetry.update();
-        pTelemetry.update();
+        if (pTelemetry != telemetry) {
+            pTelemetry.update();
+        }
+    }
+
+    private void addLoopTelemetry(Telemetry telemetry) {
+        telemetry.addData("Loop Hz (inst)", String.format("%.1f", frequencyMonitor.getInstantHz()));
+        telemetry.addData("Loop Hz (avg)", String.format("%.1f", frequencyMonitor.getSmoothedHz()));
+        telemetry.addData("Loop ms", String.format("%.2f", frequencyMonitor.getMs()));
     }
 
     @Override
