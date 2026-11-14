@@ -19,27 +19,41 @@ public final class RobotCommands {
 
     /** Returns the shooter to its idle velocity and stops firing. */
     public static Command idleShooter(Outtake outtake) {
-        return Commands.instant(outtake::startIdling).requiring(outtake);
+        return Commands.instant(outtake::startIdling).requiring(outtake).setPriority(1);
     }
 
-    /** Opens the gate and pulls rollers. The flywheel is gated on speed in Outtake.update(). */
+    /**
+     * Runs until trigger release: the gate opens only when the flywheel is at speed, then balls are fed.
+     * Interrupted by {@link #stopFiring(Outtake, Intake)}.
+     */
     public static Command fireShooter(Outtake outtake, Intake intake) {
         return Command.build()
-                .setStart(outtake::computeVelocity)
+                .setStart(() -> outtake.setFiring(true))
                 .setExecute(() -> {
                     if (outtake.shootReady()) {
                         intake.pullBalls();
-                        outtake.update();
+                    } else {
+                        intake.idle();
                     }
                 })
-                .setDone(() -> intake.getBallCount() == 0)
-                .setEnd(endCondition -> outtake.startIdling())
+                .setDone(() -> false)
+                .setEnd(endCondition -> {
+                    outtake.setFiring(false);
+                    outtake.startIdling();
+                    intake.idle();
+                })
                 .requiring(outtake, intake);
     }
 
-    /** Closes the gate and stops the rollers. */
-    public static Command stopFiring(Outtake outtake) {
-        return Commands.instant(outtake::startIdling).requiring(outtake);
+    /** Closes the gate and stops the rollers. Preempts a running fire command. */
+    public static Command stopFiring(Outtake outtake, Intake intake) {
+        return Commands.instant(() -> {
+                    outtake.setFiring(false);
+                    outtake.startIdling();
+                    intake.idle();
+                })
+                .requiring(outtake, intake)
+                .setPriority(1);
     }
 
     /** Pulls balls into the mechanism. */

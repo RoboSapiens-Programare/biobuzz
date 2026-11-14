@@ -9,8 +9,13 @@ import java.util.List;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 public class Roller implements Mechanism {
+    private static final int CURRENT_SAMPLE_EVERY = 5;
+
     private final List<CachingDcMotorEx> motors = new ArrayList<>();
     private double power = 0;
+    private double lastMotorPower = Double.NaN;
+
+    private int updateCounter = 0;
 
     private double currentLimit = 0;
     private double maxCurrent = 0;
@@ -33,8 +38,12 @@ public class Roller implements Mechanism {
     }
 
     private void setMotorPower(double p) {
-        for (CachingDcMotorEx motor : motors) {
-            motor.setPower(p);
+        if (p == lastMotorPower) {
+            return;
+        }
+        lastMotorPower = p;
+        for (int i = 0, n = motors.size(); i < n; i++) {
+            motors.get(i).setPower(p);
         }
     }
 
@@ -71,10 +80,14 @@ public class Roller implements Mechanism {
 
     @Override
     public void update() {
-        maxCurrent = 0;
+        if (++updateCounter < CURRENT_SAMPLE_EVERY) {
+            return;
+        }
+        updateCounter = 0;
 
-        for (CachingDcMotorEx motor : motors) {
-            double current = motor.getCurrent(CurrentUnit.AMPS);
+        maxCurrent = 0;
+        for (int i = 0, n = motors.size(); i < n; i++) {
+            double current = motors.get(i).getCurrent(CurrentUnit.AMPS);
             if (current > maxCurrent) {
                 maxCurrent = current;
             }

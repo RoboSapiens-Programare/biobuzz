@@ -1,16 +1,12 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.telemetry.PanelsTelemetry;
-import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-
+import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Tracker;
-
-import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 
 @Configurable
 @TeleOp(name = "Outtake Update Test", group = "Tests")
@@ -24,6 +20,7 @@ public class OuttakeUpdateOpMode extends RobotOpMode {
 
         flywheel = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel"));
         robot.outtake.stopIdling();
+        Tracker.setEnabled(true);
     }
 
     @Override
@@ -40,9 +37,9 @@ public class OuttakeUpdateOpMode extends RobotOpMode {
         pTelemetry.addData("At speed", atSpeed);
         pTelemetry.addData("Gate open", robot.outtake.shootReady());
         pTelemetry.addData("Track angle", String.format("%.1f deg", Math.toDegrees(robot.tracker.getTrackAngle())));
-        pTelemetry.addData("Hood", String.format("%.2f", robot.tracker.getHood()));
+        pTelemetry.addData("Pivot pos", String.format("%.3f", robot.outtake.pos));
         pTelemetry.addData(
-                "Distance", String.format("%.1f", robot.follower.pose().distance(Tracker.trackPose)));
+                "Distance", String.format("%.1f", robot.follower.pose().distance(Tracker.getTrackPose())));
 
         pTelemetry.addData("Motor current", flywheel.getCurrent(CurrentUnit.AMPS));
     }

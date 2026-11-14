@@ -8,7 +8,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Roller;
 @Configurable
 public class Intake implements Subsystem {
     private final Roller rollerOne = new Roller();
-    public static boolean useDoubleMotorSetup = false;
+    public static boolean useDoubleMotorSetup = true;
 
     public Intake(HardwareMap hwMap) {
         // Example usages

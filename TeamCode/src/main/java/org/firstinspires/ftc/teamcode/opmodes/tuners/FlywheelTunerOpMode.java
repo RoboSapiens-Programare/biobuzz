@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.opmodes.tuners;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -31,13 +30,14 @@ import org.firstinspires.ftc.teamcode.utils.ControlSystems.Tuners.FFTuner;
  *
  * Press START to run.
  */
-//@Disabled
+// @Disabled
 @TeleOp(name = "Flywheel Tuner", group = "Tuners")
 public class FlywheelTunerOpMode extends OpMode {
     /** One entry per flywheel motor. The first entry is the velocity encoder. */
     protected TelemetryManager.TelemetryWrapper telemetry;
+
     private static final MotorSpec[] MOTORS = {
-            new MotorSpec("flywheel", true),
+        new MotorSpec("flywheel", true),
     };
 
     // FF ramp stage

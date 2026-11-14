@@ -68,7 +68,7 @@ public class VelocityTuningOpMode extends RobotOpMode {
 
         telemetry.addData("Target velocity", velocity);
         telemetry.addData("Current speed", robot.outtake.getCurrentSpeed());
-        telemetry.addData("Distance to track pose", Robot.follower.pose().distance(Tracker.trackPose));
+        telemetry.addData("Distance to track pose", Robot.follower.pose().distance(Tracker.getTrackPose()));
         telemetry.addData("Points", points.length());
         telemetry.addData("Log file", logFile.getAbsolutePath());
     }
@@ -80,7 +80,7 @@ public class VelocityTuningOpMode extends RobotOpMode {
     }
 
     private void logPoint() {
-        double dist = Robot.follower.pose().distance(Tracker.trackPose);
+        double dist = Robot.follower.pose().distance(Tracker.getTrackPose());
         try {
             points.put(new JSONObject().put("dist", dist).put("vel", velocity));
         } catch (JSONException e) {
