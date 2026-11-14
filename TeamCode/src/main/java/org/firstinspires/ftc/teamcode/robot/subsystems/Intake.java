@@ -53,7 +53,11 @@ public class Intake implements Subsystem {
     }
 
     public int getBallCount() {
-        return 0;
+        int count = 0;
+        count += pollenOneDistance < MIN_DISTANCE ? 1 : 0;
+        count += pollenThreeDistance < MIN_DISTANCE ? 1 : 0;
+
+        return count;
     }
 
     @Override
