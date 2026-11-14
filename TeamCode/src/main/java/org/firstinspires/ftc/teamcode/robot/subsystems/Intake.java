@@ -4,6 +4,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.mechanisms.Roller;
@@ -29,6 +30,8 @@ public class Intake implements Subsystem {
     public static double MIN_DISTANCE = 5;
     public static double PULL_POWER = 0.72;
 
+    private final Servo flower;
+
     public Intake(HardwareMap hwMap) {
         rollerOne.addMotor(hwMap.get(DcMotorEx.class, "roller_motor"), true);
         rollerTwo.addMotor(hwMap.get(DcMotorEx.class, "roller_motor_2"));
@@ -38,6 +41,8 @@ public class Intake implements Subsystem {
 
         pollenOneSensor = hwMap.get(DistanceSensor.class, "pollen_one_sensor");
         pollenThreeSensor = hwMap.get(DistanceSensor.class, "pollen_three_sensor");
+
+        flower = hwMap.get(Servo.class, "flower_servo");
     }
 
     public void pullBalls() {
@@ -52,6 +57,14 @@ public class Intake implements Subsystem {
         mode = Mode.IDLE;
     }
 
+    public void lowerFlower() {
+        flower.setPosition(0.3);
+    }
+
+    public void raiseFlower() {
+        flower.setPosition(0.9);
+    }
+
     public int getBallCount() {
         int count = 0;
         count += pollenOneDistance < MIN_DISTANCE ? 1 : 0;
@@ -64,6 +77,8 @@ public class Intake implements Subsystem {
     public void init() {
         mode = Mode.IDLE;
         sensorTimer.reset();
+
+        raiseFlower();
     }
 
     @Override

@@ -28,7 +28,7 @@ public class RedAuto extends RobotOpMode {
     private final Pose shootOneStart = poseFactory.of(8, 8, -90);
     private final Pose shootOne = poseFactory.of(46.7, 125, 90);
     private final Pose shootOneControl1 = poseFactory.of(16.2281, 121.2026, 0);
-    private final Pose grabFlower = poseFactory.of(46.7, 130, -90);
+    private final Pose grabFlower = poseFactory.of(46.7, 130, 90);
     private final Pose endStart = poseFactory.of(46.7, 130, 90);
     private final Pose end = poseFactory.of(60.2544, 120, 0);
 
@@ -36,26 +36,34 @@ public class RedAuto extends RobotOpMode {
     public Command autoRoutine() {
         return sequential(
                 RobotCommands.fireWhileHeld(robot.outtake, robot.intake, () -> robot.intake.getBallCount() > 0),
+
                 follow(Robot.follower, goGrabGarden()),
                 instant(() -> Tracker.setTrackingFrequency(30)),
                 RobotCommands.pullBalls(robot.intake),
+
                 follow(Robot.follower, grabGarden()),
-                waitMs(1000),
+                RobotCommands.intakeTimeout(robot.intake, 1000),
                 RobotCommands.idleIntake(robot.intake),
                 instant(() -> Tracker.setTrackingFrequency(80)),
-                //                waitUntil(() -> robot.intake.getBallCount() == 2),
 
                 follow(Robot.follower, shootOne()),
                 RobotCommands.fireWhileHeld(robot.outtake, robot.intake, () -> robot.intake.getBallCount() > 0),
+
                 instant(() -> Tracker.setTrackingFrequency(30)),
-                // lower flower intake
+                RobotCommands.lowerFlower(robot.intake),
                 RobotCommands.pullBalls(robot.intake),
+
                 follow(Robot.follower, grabFlower()),
-                waitMs(1000),
-                RobotCommands.idleIntake(robot.intake),
+
                 instant(() -> Tracker.setTrackingFrequency(80)),
+                RobotCommands.intakeTimeout(robot.intake, 1000),
+                RobotCommands.idleIntake(robot.intake),
+
                 RobotCommands.fireWhileHeld(robot.outtake, robot.intake, () -> robot.intake.getBallCount() > 0),
-                follow(Robot.follower, end()));
+
+                follow(Robot.follower, end()),
+                RobotCommands.raiseFlower(robot.intake)
+        );
     }
 
     @Override

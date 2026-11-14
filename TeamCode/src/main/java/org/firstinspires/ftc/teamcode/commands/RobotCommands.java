@@ -95,4 +95,26 @@ public final class RobotCommands {
     public static Command idleIntake(Intake intake) {
         return Commands.instant(intake::idle).requiring(intake);
     }
+
+    /**
+     * Drops the flower servo into its lowered (pickup) position.
+     * Drives only the servo, so it does not require the intake and will not interrupt a running
+     * intake or fire command.
+     */
+    public static Command lowerFlower(Intake intake) {
+        return Commands.instant(intake::lowerFlower);
+    }
+
+    /** Returns the flower servo to its raised (stowed) position. */
+    public static Command raiseFlower(Intake intake) {
+        return Commands.instant(intake::raiseFlower);
+    }
+
+    /**
+     * Waits until the intake stages two balls, or until {@code ms} elapses, whichever comes first.
+     * Does not run the intake; pair it with {@link #pullBalls(Intake)} and {@link #idleIntake(Intake)}.
+     */
+    public static Command intakeTimeout(Intake intake, int ms) {
+        return Commands.waitUntil(() -> intake.getBallCount() >= 2).raceWith(Commands.waitMs(ms));
+    }
 }
