@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Scanner;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.commands.RobotCommands;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Tracker;
@@ -53,7 +54,6 @@ public class TeleOP extends RobotOpMode {
     private CachingDcMotorEx front_left, front_right, rear_left, rear_right, roller, flywheel;
     private VoltageSensor myExpansionHubVoltageSensor;
 
-    private boolean firing;
     private boolean lastFire, lastPull, lastPush;
     private String driveCurrentFLFR = "",
             driveCurrentRLRR = "",
@@ -79,15 +79,10 @@ public class TeleOP extends RobotOpMode {
 
         Tracker.setTrackingFrequency(state == States.OUTTAKE ? TRACKING_HZ_OUTTAKE : TRACKING_HZ_INTAKE);
 
-        switch (state) {
-            case INTAKE:
-                robot.outtake.setFiring(false);
-                robot.outtake.startIdling();
-                robot.intake.idle();
-                break;
-            case OUTTAKE:
-                robot.outtake.stopIdling();
-                break;
+        if (state == States.INTAKE) {
+            RobotCommands.safeStop(robot.outtake, robot.intake).schedule();
+        } else {
+            RobotCommands.spoolShooter(robot.outtake).schedule();
         }
 
         // Require the triggers to be released and pressed again after a state change.
@@ -96,7 +91,6 @@ public class TeleOP extends RobotOpMode {
         lastFire = rightHeld;
         lastPull = rightHeld && !leftHeld;
         lastPush = leftHeld && !rightHeld;
-        firing = false;
 
         debounceTimer.reset();
     }
@@ -153,11 +147,6 @@ public class TeleOP extends RobotOpMode {
     }
 
     @Override
-    protected boolean shouldExecuteScheduler() {
-        return false;
-    }
-
-    @Override
     protected void onUpdate() {
         Pose robotPose = follower.pose();
 
@@ -193,13 +182,13 @@ public class TeleOP extends RobotOpMode {
                 boolean pushHeld = leftHeld && !rightHeld;
 
                 if (onRise(pullHeld, lastPull)) {
-                    robot.intake.pullBalls();
+                    RobotCommands.pullBalls(robot.intake).schedule();
                 }
                 if (onRise(pushHeld, lastPush)) {
-                    robot.intake.pushBalls();
+                    RobotCommands.pushBalls(robot.intake).schedule();
                 }
                 if ((onDrop(pullHeld, lastPull) || onDrop(pushHeld, lastPush)) && !pullHeld && !pushHeld) {
-                    robot.intake.idle();
+                    RobotCommands.idleIntake(robot.intake).schedule();
                 }
 
                 lastPull = pullHeld;
@@ -209,22 +198,13 @@ public class TeleOP extends RobotOpMode {
 
             case OUTTAKE: {
                 if (onRise(rightHeld, lastFire)) {
-                    robot.outtake.setFiring(true);
-                    firing = true;
-                } else if (onDrop(rightHeld, lastFire) && firing) {
-                    robot.outtake.setFiring(false);
-                    robot.outtake.startIdling();
-                    robot.intake.idle();
-                    state = States.INTAKE;
-                    firing = false;
-                }
-
-                if (firing) {
-                    if (robot.outtake.shootReady()) {
-                        robot.intake.pullBalls();
-                    } else {
-                        robot.intake.idle();
-                    }
+                    RobotCommands.fireWhileHeld(
+                                    robot.outtake,
+                                    robot.intake,
+                                    () -> state == States.OUTTAKE && gamepad1.right_trigger > 0.1)
+                            .schedule();
+                } else if (onDrop(rightHeld, lastFire) && robot.outtake.isFiring()) {
+                    changeState(States.INTAKE);
                 }
 
                 lastFire = rightHeld;
