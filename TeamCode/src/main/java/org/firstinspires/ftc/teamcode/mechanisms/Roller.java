@@ -26,7 +26,7 @@ public class Roller implements Mechanism {
         motorC.setDirection(reverse ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
         motorC.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorC.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motorC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         motors.add(motorC);
 

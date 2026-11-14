@@ -2,34 +2,54 @@ package org.firstinspires.ftc.teamcode.robot.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.mechanisms.Roller;
 
 @Configurable
 public class Intake implements Subsystem {
+    private enum Mode {
+        PULL,
+        PUSH,
+        IDLE
+    }
+
     private final Roller rollerOne = new Roller();
-    public static boolean useDoubleMotorSetup = true;
+    private final Roller rollerTwo = new Roller();
+    private final DistanceSensor pollenOneSensor;
+    private final DistanceSensor pollenThreeSensor;
+    private final ElapsedTime sensorTimer = new ElapsedTime();
+
+    private double pollenOneDistance = Double.POSITIVE_INFINITY;
+    private double pollenThreeDistance = Double.POSITIVE_INFINITY;
+    private Mode mode = Mode.IDLE;
+
+    public static double MIN_DISTANCE = 5;
+    public static double PULL_POWER = 0.72;
 
     public Intake(HardwareMap hwMap) {
-        // Example usages
         rollerOne.addMotor(hwMap.get(DcMotorEx.class, "roller_motor"), true);
-        if (useDoubleMotorSetup) {
-            rollerOne.addMotor(hwMap.get(DcMotorEx.class, "roller_motor_2"), true);
-        }
+        rollerTwo.addMotor(hwMap.get(DcMotorEx.class, "roller_motor_2"));
 
-        rollerOne.setPower(0.72);
+        rollerOne.setPower(PULL_POWER);
+        rollerTwo.setPower(PULL_POWER);
+
+        pollenOneSensor = hwMap.get(DistanceSensor.class, "pollen_one_sensor");
+        pollenThreeSensor = hwMap.get(DistanceSensor.class, "pollen_three_sensor");
     }
 
     public void pullBalls() {
-        rollerOne.pull();
+        mode = Mode.PULL;
     }
 
     public void pushBalls() {
-        rollerOne.push();
+        mode = Mode.PUSH;
     }
 
     public void idle() {
-        rollerOne.idle();
+        mode = Mode.IDLE;
     }
 
     public int getBallCount() {
@@ -37,22 +57,67 @@ public class Intake implements Subsystem {
     }
 
     @Override
-    public void init() {}
-
-    @Override
-    public void update() {
-        rollerOne.update();
+    public void init() {
+        mode = Mode.IDLE;
+        sensorTimer.reset();
     }
 
     @Override
-    public void reset() {}
+    public void update() {
+        if (sensorTimer.milliseconds() > 100) {
+            pollenOneDistance = pollenOneSensor.getDistance(DistanceUnit.CM);
+            pollenThreeDistance = pollenThreeSensor.getDistance(DistanceUnit.CM);
+
+            sensorTimer.reset();
+        }
+
+        boolean staged = pollenOneDistance < MIN_DISTANCE && pollenThreeDistance < MIN_DISTANCE;
+        applyMode(staged);
+
+        rollerOne.update();
+        rollerTwo.update();
+    }
+
+    private void applyMode(boolean staged) {
+        switch (mode) {
+            case PULL:
+                // Roller one keeps feeding even when the stage is full so balls stay
+                // loaded against roller two; only roller two pauses to avoid a jam.
+                rollerOne.pull();
+                if (staged) {
+                    rollerTwo.idle();
+                } else {
+                    rollerTwo.pull();
+                }
+                break;
+            case PUSH:
+                rollerOne.push();
+                rollerTwo.push();
+                break;
+            case IDLE:
+            default:
+                rollerOne.idle();
+                rollerTwo.idle();
+                break;
+        }
+    }
+
+    @Override
+    public void reset() {
+        mode = Mode.IDLE;
+        pollenOneDistance = Double.POSITIVE_INFINITY;
+        pollenThreeDistance = Double.POSITIVE_INFINITY;
+        sensorTimer.reset();
+    }
 
     @Override
     public void stop() {
         idle();
+        rollerOne.stop();
+        rollerTwo.stop();
     }
 
     public double getMaxCurrent() {
-        return rollerOne.getMaxCurrent();
+        return Math.max(rollerOne.getMaxCurrent(), rollerTwo.getMaxCurrent());
     }
 }

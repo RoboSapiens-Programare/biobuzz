@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.commands;
 
 import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.commands.Commands;
+import java.util.function.BooleanSupplier;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Outtake;
 
@@ -10,6 +11,8 @@ import org.firstinspires.ftc.teamcode.robot.subsystems.Outtake;
  * Usage inside an OpMode: RobotCommands.spoolShooter(robot.outtake).schedule();
  */
 public final class RobotCommands {
+    private static final double UNCLOG_MS = 400;
+
     private RobotCommands() {}
 
     /** Spools the flywheel to shooting speed. */
@@ -23,37 +26,54 @@ public final class RobotCommands {
     }
 
     /**
-     * Runs until trigger release: the gate opens only when the flywheel is at speed, then balls are fed.
-     * Interrupted by {@link #stopFiring(Outtake, Intake)}.
+     * Fires until interrupted, feeding only when the shooter reports ready.
+     * Interrupted by {@link #safeStop(Outtake, Intake)}.
      */
     public static Command fireShooter(Outtake outtake, Intake intake) {
+        return fireWhileHeld(outtake, intake, () -> true);
+    }
+
+    /** Fires while {@code held} is true and cleans up as soon as it is released. */
+    public static Command fireWhileHeld(Outtake outtake, Intake intake, BooleanSupplier held) {
         return Command.build()
                 .setStart(() -> outtake.setFiring(true))
-                .setExecute(() -> {
-                    if (outtake.shootReady()) {
-                        intake.pullBalls();
-                    } else {
-                        intake.idle();
-                    }
-                })
-                .setDone(() -> false)
-                .setEnd(endCondition -> {
-                    outtake.setFiring(false);
-                    outtake.startIdling();
-                    intake.idle();
-                })
+                .setExecute(() -> feed(outtake, intake))
+                .setDone(() -> !held.getAsBoolean())
+                .setEnd(endCondition -> stopFiringNow(outtake, intake))
                 .requiring(outtake, intake);
     }
 
-    /** Closes the gate and stops the rollers. Preempts a running fire command. */
-    public static Command stopFiring(Outtake outtake, Intake intake) {
-        return Commands.instant(() -> {
-                    outtake.setFiring(false);
-                    outtake.startIdling();
-                    intake.idle();
-                })
+    /**
+     * Feeds balls while the shooter is ready and idles otherwise. Runs until interrupted.
+     * Does not control the gate or firing state; pair it with the shooter commands.
+     */
+    public static Command feedWhenReady(Outtake outtake, Intake intake) {
+        return Command.build()
+                .setExecute(() -> feed(outtake, intake))
+                .setDone(() -> false)
+                .setEnd(endCondition -> intake.idle())
+                .requiring(intake);
+    }
+
+    private static void feed(Outtake outtake, Intake intake) {
+        if (outtake.shootReady()) {
+            intake.pullBalls();
+        } else {
+            intake.idle();
+        }
+    }
+
+    /** Stops firing and idles the shooter and intake. Preempts a running fire command. */
+    public static Command safeStop(Outtake outtake, Intake intake) {
+        return Commands.instant(() -> stopFiringNow(outtake, intake))
                 .requiring(outtake, intake)
                 .setPriority(1);
+    }
+
+    private static void stopFiringNow(Outtake outtake, Intake intake) {
+        outtake.setFiring(false);
+        outtake.startIdling();
+        intake.idle();
     }
 
     /** Pulls balls into the mechanism. */
@@ -64,6 +84,11 @@ public final class RobotCommands {
     /** Pushes balls back out (unclog). */
     public static Command pushBalls(Intake intake) {
         return Commands.instant(intake::pushBalls).requiring(intake);
+    }
+
+    /** Pushes balls out briefly, then idles the intake. */
+    public static Command unclogIntake(Intake intake) {
+        return pushBalls(intake).then(Commands.waitMs(UNCLOG_MS)).then(idleIntake(intake));
     }
 
     /** Stops the intake rollers. */
