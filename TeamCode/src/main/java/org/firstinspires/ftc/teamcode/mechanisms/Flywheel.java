@@ -15,6 +15,7 @@ public class Flywheel implements Mechanism {
     private CachingDcMotorEx encoder;
     public double idlingPower = 0;
     private double targetVelocity;
+    private double lastPower = Double.NaN;
 
     public enum FlywheelMode {
         IDLING,
@@ -90,29 +91,33 @@ public class Flywheel implements Mechanism {
     @Override
     public void init() {}
 
+    private void applyPower(double power) {
+        if (power == lastPower) {
+            return;
+        }
+        lastPower = power;
+        for (int i = 0, n = motors.size(); i < n; i++) {
+            motors.get(i).setPower(power);
+        }
+    }
+
     @Override
     public void update() {
         switch (mode) {
             case IDLING:
-                for (DcMotorEx motor : motors) {
-                    motor.setPower(idlingPower);
-                }
+                applyPower(idlingPower);
                 break;
             case PRIMED:
-                double output = ffController.update(encoder.getVelocity());
-
-                for (DcMotorEx motor : motors) {
-                    motor.setPower(output);
-                }
+                applyPower(ffController.update(encoder.getVelocity()));
                 break;
         }
     }
 
     @Override
     public void reset() {
-        for (DcMotorEx motor : motors) {
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        for (int i = 0, n = motors.size(); i < n; i++) {
+            motors.get(i).setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motors.get(i).setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
         encoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -122,9 +127,6 @@ public class Flywheel implements Mechanism {
     @Override
     public void stop() {
         ffController.setTargetVelocity(0);
-
-        for (DcMotorEx motor : motors) {
-            motor.setPower(0);
-        }
+        applyPower(0);
     }
 }

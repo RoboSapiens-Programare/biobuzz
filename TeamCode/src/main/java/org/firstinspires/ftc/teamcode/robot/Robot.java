@@ -23,6 +23,8 @@ public class Robot {
 
     public static Follower follower;
 
+    private boolean llLocatorEnabled = true;
+
     private static List<LynxModule> allHubs = Collections.emptyList();
 
     public enum Alliance {
@@ -31,6 +33,7 @@ public class Robot {
     };
 
     public static Alliance alliance = Alliance.BLUE;
+    public static boolean TUNING = false;
     //    public static Pose transitionPose = new Pose(63, 9, Math.PI / 2);
 
     public Robot(HardwareMap hwMap) {
@@ -57,12 +60,22 @@ public class Robot {
         }
     }
 
+    public void setLLLocatorEnabled(boolean enabled) {
+        llLocatorEnabled = enabled;
+    }
+
+    public boolean isLLLocatorEnabled() {
+        return llLocatorEnabled;
+    }
+
     public void update() {
+        follower.update();
+        tracker.update();
         intake.update();
         outtake.update();
-        llLocator.update();
-        tracker.update();
-        follower.update();
+        if (llLocatorEnabled) {
+            llLocator.update();
+        }
     }
 
     public void init() {
@@ -70,6 +83,8 @@ public class Robot {
         outtake.init();
         llLocator.init();
         tracker.init();
+
+        //        outtake.setTracker(tracker);
     }
 
     public void stop() {

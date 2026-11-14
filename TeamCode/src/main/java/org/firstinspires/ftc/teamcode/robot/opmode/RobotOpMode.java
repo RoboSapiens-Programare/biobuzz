@@ -26,6 +26,20 @@ public abstract class RobotOpMode extends OpMode {
     protected boolean panelsTelemetry = true;
     protected final FrequencyMonitor frequencyMonitor = new FrequencyMonitor();
 
+    /** Telemetry update rate in Hz. 0 keeps the original every-loop behavior. */
+    protected double telemetryHz = 0;
+
+    private boolean telemetryDue = true;
+    private long lastTelemetryNanos;
+
+    protected boolean telemetryDue() {
+        return telemetryDue;
+    }
+
+    protected boolean shouldExecuteScheduler() {
+        return true;
+    }
+
     /** Called once in init(). Override for setup. */
     protected void onInit() {}
 
@@ -70,20 +84,30 @@ public abstract class RobotOpMode extends OpMode {
 
         Robot.resetCache();
 
+        long now = System.nanoTime();
+        telemetryDue = telemetryHz <= 0 || now - lastTelemetryNanos >= (long) (1e9 / telemetryHz);
+        if (telemetryDue) {
+            lastTelemetryNanos = now;
+        }
+
         onUpdate();
 
-        Scheduler.execute();
+        if (shouldExecuteScheduler()) {
+            Scheduler.execute();
+        }
 
         robot.update();
 
-        addLoopTelemetry(telemetry);
-        if (pTelemetry != telemetry) {
-            addLoopTelemetry(pTelemetry);
-        }
+        if (telemetryDue) {
+            addLoopTelemetry(telemetry);
+            if (pTelemetry != telemetry) {
+                addLoopTelemetry(pTelemetry);
+            }
 
-        telemetry.update();
-        if (pTelemetry != telemetry) {
-            pTelemetry.update();
+            telemetry.update();
+            if (pTelemetry != telemetry) {
+                pTelemetry.update();
+            }
         }
     }
 

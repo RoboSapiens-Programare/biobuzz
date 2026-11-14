@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import dev.frozenmilk.dairy.cachinghardware.CachingServo;
 import org.firstinspires.ftc.teamcode.mechanisms.Flywheel;
 import org.firstinspires.ftc.teamcode.mechanisms.Roller;
+import org.firstinspires.ftc.teamcode.robot.Robot;
 
 @Configurable
 public class Outtake implements Subsystem {
@@ -17,14 +18,23 @@ public class Outtake implements Subsystem {
     private final CachingServo gate;
     private final CachingServo pivot_left, pivot_right;
     public static final double PIVOT_RANGE = Math.toRadians((double) (360 * 3) / 4);
+    private static final double PIVOT_TOLERANCE = 0.002;
     public static double aimOffset = Math.toRadians(0);
 
     private Tracker tracker;
+    private boolean firing = false;
 
-    public static double GATE_OPEN = 0.5;
-    public static double GATE_CLOSED = 0;
+    private double lastGatePosition = Double.NaN;
+    private int lastAimVersion = Integer.MIN_VALUE;
 
-    public static double velocity = 0;
+    private double lastKP = Double.NaN;
+    private double lastKI = Double.NaN;
+    private double lastKD = Double.NaN;
+    private double lastKS = Double.NaN;
+    private double lastKV = Double.NaN;
+
+    public static double GATE_OPEN = 0.76;
+    public static double GATE_CLOSED = 0.63;
 
     public static double kP = 0.0172;
     public static double kI = 0.1707;
@@ -47,32 +57,79 @@ public class Outtake implements Subsystem {
         pivot_left = new CachingServo(hwMap.get(Servo.class, "pivot_left"));
 
         pivot_right = new CachingServo(hwMap.get(Servo.class, "pivot_right"));
+
+        pivot_left.setCachingTolerance(PIVOT_TOLERANCE);
+        pivot_right.setCachingTolerance(PIVOT_TOLERANCE);
+
+        pivot_right.getController().pwmDisable();
+        pivot_left.getController().pwmDisable();
     }
 
     @Override
     public void init() {
         aimAt(0);
+        setGate(GATE_CLOSED);
     }
 
     @Override
     public void update() {
-        flywheel.setPIDConstants(kP, kI, kD);
-        flywheel.setFFConstants(kS, kV, 0);
-        flywheel.update();
+        if (kP != lastKP || kI != lastKI || kD != lastKD) {
+            lastKP = kP;
+            lastKI = kI;
+            lastKD = kD;
+            flywheel.setPIDConstants(kP, kI, kD);
+        }
 
-        if (shootReady() && flywheel.mode == Flywheel.FlywheelMode.PRIMED) {
-            gate.setPosition(GATE_OPEN);
-        } else {
-            gate.setPosition(GATE_CLOSED);
+        if (kS != lastKS || kV != lastKV) {
+            lastKS = kS;
+            lastKV = kV;
+            flywheel.setFFConstants(kS, kV, 0);
         }
 
         if (tracker != null && Tracker.isEnabled()) {
-            aimAt(tracker.getTrackAngle());
+            if (!Robot.TUNING) {
+                double trackerVelocity = tracker.getVelocity();
+                if (firing || trackerVelocity > 0) {
+                    flywheel.setTargetVelocity(trackerVelocity);
+                }
+            }
+
+            int angleVersion = Tracker.getAngleVersion();
+            if (angleVersion != lastAimVersion) {
+                lastAimVersion = angleVersion;
+                aimAt(tracker.getTrackAngle());
+            }
         }
+
+        flywheel.update();
+
+        if (Robot.TUNING && flywheel.mode == Flywheel.FlywheelMode.PRIMED) {
+            setGate(GATE_OPEN);
+        } else if (firing && shootReady() && flywheel.mode == Flywheel.FlywheelMode.PRIMED) {
+            setGate(GATE_OPEN);
+        } else {
+            setGate(GATE_CLOSED);
+        }
+    }
+
+    private void setGate(double position) {
+        if (position == lastGatePosition) {
+            return;
+        }
+        lastGatePosition = position;
+        gate.setPosition(position);
     }
 
     public void setTracker(Tracker tracker) {
         this.tracker = tracker;
+    }
+
+    public void setFiring(boolean firing) {
+        this.firing = firing;
+    }
+
+    public boolean isFiring() {
+        return firing;
     }
 
     public double getTarget() {
@@ -83,16 +140,13 @@ public class Outtake implements Subsystem {
         return flywheel.getCurrentVelocity();
     }
 
-    public void computeVelocity() {
-        flywheel.setTargetVelocity(velocity);
-    }
-
     public void setVelocity(double velocity) {
         flywheel.setTargetVelocity(velocity);
     }
 
     public boolean shootReady() {
-        return flywheel.velocityReached();
+        //        return flywheel.velocityReached();
+        return true;
     }
 
     public void startIdling() {
@@ -122,7 +176,8 @@ public class Outtake implements Subsystem {
 
     @Override
     public void stop() {
-        gate.setPosition(GATE_CLOSED);
+        firing = false;
+        setGate(GATE_CLOSED);
         rollers.idle();
         flywheel.stop();
     }
