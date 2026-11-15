@@ -2,18 +2,28 @@ name: Spotless Check
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
+    paths:
+      - 'TeamCode/**'
+      - 'build.gradle'
+      - 'settings.gradle'
   pull_request:
-    branches: [master]
+    branches: [ master ]
+    paths:
+      - 'TeamCode/**'
+      - 'build.gradle'
+      - 'settings.gradle'
 
 jobs:
   spotless:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
-          distribution: "temurin"
-          java-version: "21"
-          cache: "gradle"
-      - run: chmod +x ./gradlew && ./gradlew spotlessCheck
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - run: chmod +x ./gradlew && ./gradlew :TeamCode:spotlessCheck
