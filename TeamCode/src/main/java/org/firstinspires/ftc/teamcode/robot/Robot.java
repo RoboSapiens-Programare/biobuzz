@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -12,9 +13,8 @@ import org.firstinspires.ftc.teamcode.robot.subsystems.LLLocator;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Outtake;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Tracker;
 
+@Configurable
 public class Robot {
-    public boolean initialize;
-
     public Outtake outtake;
     public Intake intake;
     public LLLocator llLocator;
@@ -78,7 +78,7 @@ public class Robot {
         llLocator.init();
         tracker.init();
 
-        //        outtake.setTracker(tracker);
+        outtake.setTracker(tracker);
     }
 
     public void stop() {

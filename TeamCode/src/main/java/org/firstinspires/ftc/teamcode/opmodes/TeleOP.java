@@ -18,15 +18,12 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Scanner;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.commands.RobotCommands;
+import org.firstinspires.ftc.teamcode.robot.FileTelemetry.FileTelemetry;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Tracker;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 @TeleOp
 @Configurable
@@ -62,8 +59,7 @@ public class TeleOP extends RobotOpMode {
             intakeMax = "";
 
     private double tuningVelocity = 1100;
-    private int tuningSnapshotCount;
-    private File tuningFile;
+    private FileTelemetry tuningLog;
     private String tuningError = "";
 
     private static boolean onRise(boolean now, boolean last) {
@@ -111,7 +107,6 @@ public class TeleOP extends RobotOpMode {
 
         myExpansionHubVoltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
 
-        follower.setHeading(0);
         robot.setLLLocatorEnabled(false);
 
         // Set initial state actions safely on init
@@ -130,7 +125,18 @@ public class TeleOP extends RobotOpMode {
         Tracker.setTrackingFrequency(state == States.OUTTAKE ? TRACKING_HZ_OUTTAKE : TRACKING_HZ_INTAKE);
         debounceTimer.reset();
 
-        follower.setPose(new Pose(7.2, 8, Math.PI / 2));
+    }
+
+    @Override
+    protected boolean shouldExecuteScheduler() {
+        return false;
+    }
+
+    @Override
+    protected void onStop() {
+        if (tuningLog != null) {
+            tuningLog.close();
+        }
     }
 
     @Override
@@ -143,6 +149,8 @@ public class TeleOP extends RobotOpMode {
         follower.manual(powers);
 
         if (Robot.TUNING) {
+            ensureTuningLog();
+
             if (gamepad1.dpadUpWasPressed()) {
                 tuningVelocity = Math.max(0, tuningVelocity + 10);
                 robot.outtake.setVelocity(tuningVelocity);
@@ -238,8 +246,10 @@ public class TeleOP extends RobotOpMode {
                 pTelemetry.addData("Target velocity", String.format("%.0f", robot.outtake.getTarget()));
                 pTelemetry.addData(
                         "Distance to goal", String.format("%.2f", robotPose.distance(Tracker.getTrackPose())));
-                pTelemetry.addData("Snapshots", tuningSnapshotCount);
-                pTelemetry.addData("File", tuningFile == null ? "-" : tuningFile.getAbsolutePath());
+                pTelemetry.addData("Snapshots", tuningLog == null ? 0 : tuningLog.getSnapshotCount());
+                pTelemetry.addData(
+                        "File",
+                        tuningLog == null ? "-" : tuningLog.getOutputFile().getAbsolutePath());
                 if (!tuningError.isEmpty()) {
                     pTelemetry.addData("Save error", tuningError);
                 }
@@ -267,21 +277,26 @@ public class TeleOP extends RobotOpMode {
         // pTelemetry.addData("Omega limit", String.format("%.1f", omegaLimit));
     }
 
+    private void ensureTuningLog() {
+        if (tuningLog != null) {
+            return;
+        }
+
+        tuningLog = new FileTelemetry(FileTelemetry.Type.JSON_ARRAY, tuningFileForToday());
+        tuningLog.addField("dist");
+        tuningLog.addField("vel");
+    }
+
     private void saveTuningSnapshot() {
-        tuningFile = tuningFileForToday();
-        JSONArray points = loadTuningPoints(tuningFile);
+        ensureTuningLog();
 
         double distance = Robot.follower.pose().distance(Tracker.getTrackPose());
         double velocity = robot.outtake.getTarget();
 
         try {
-            points.put(new JSONObject().put("dist", distance).put("vel", velocity));
-            try (FileWriter writer = new FileWriter(tuningFile, false)) {
-                writer.write(points.toString(2));
-            }
-            tuningSnapshotCount = points.length();
+            tuningLog.takeSnapshot(distance, velocity);
             tuningError = "";
-        } catch (JSONException | IOException e) {
+        } catch (RuntimeException e) {
             tuningError = e.toString();
         }
     }
@@ -289,24 +304,5 @@ public class TeleOP extends RobotOpMode {
     private File tuningFileForToday() {
         String date = new SimpleDateFormat("dd_MM_yyyy", Locale.US).format(new Date());
         return new File(hardwareMap.appContext.getFilesDir(), date + "_tuning.json");
-    }
-
-    private JSONArray loadTuningPoints(File file) {
-        if (!file.exists()) {
-            return new JSONArray();
-        }
-
-        try (Scanner scanner = new Scanner(file)) {
-            StringBuilder contents = new StringBuilder();
-            while (scanner.hasNextLine()) {
-                contents.append(scanner.nextLine());
-            }
-            if (contents.length() > 0) {
-                return new JSONArray(contents.toString());
-            }
-        } catch (Exception e) {
-            tuningError = e.toString();
-        }
-        return new JSONArray();
     }
 }

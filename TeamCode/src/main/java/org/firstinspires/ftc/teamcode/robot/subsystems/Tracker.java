@@ -22,6 +22,7 @@ public class Tracker implements Subsystem {
     // Hysteresis on the hive switch so the aim does not flap near the midline.
     private static final double SWITCH_TO_LEFT_Y = 73;
     private static final double SWITCH_TO_RIGHT_Y = 71;
+    private static final double MAX_RANGE = Math.toRadians((double) (360 * 3) / 4 - 10);
 
     private static boolean sotmEnabled = true;
     private static double sotmOffset = 0;
@@ -156,7 +157,7 @@ public class Tracker implements Subsystem {
             angle = wrapAngle(angle + sotmOffset);
         }
 
-        angle = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, angle));
+        angle = Math.max(-MAX_RANGE / 2, Math.min(MAX_RANGE / 2, angle));
 
         lastTrackAngle = angle;
         lastVelocity = computeVelocity(dist);

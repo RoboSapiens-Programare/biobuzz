@@ -36,10 +36,10 @@ public class Outtake implements Subsystem {
     public static double GATE_OPEN = 0.76;
     public static double GATE_CLOSED = 0.63;
 
-    public static double kP = 0.0172;
-    public static double kI = 0.1707;
-    public static double kD = 0.0004;
-    public static double kS = 0.0199;
+    public static double kP = 0.0149;
+    public static double kI = 0.2134;
+    public static double kD = 0.0003;
+    public static double kS = 0.0106;
     public static double kV = 0.0004;
 
     public double pos = 0;
