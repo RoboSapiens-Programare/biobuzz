@@ -13,8 +13,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 // import dev.frozenmilk.dairy.pasteurized.Pasteurized;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -123,7 +121,6 @@ public class TeleOP extends RobotOpMode {
         Tracker.setEnabled(true);
         Tracker.setTrackingFrequency(state == States.OUTTAKE ? TRACKING_HZ_OUTTAKE : TRACKING_HZ_INTAKE);
         debounceTimer.reset();
-
     }
 
     @Override
