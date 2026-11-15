@@ -1,0 +1,9 @@
+name: Maven Spotless Check
+
+on:
+  push: [master]
+  pull_request: [master]
+
+jobs:
+  spotless-check:
+    uses: mekomsolutions/shared-github-workflow/.github/workflows/maven-spotless-check.yml@main
