@@ -15,8 +15,13 @@ public class Tracker implements Subsystem {
     private static int angleVersion = 0;
     private static boolean hasComputed = false;
     private static boolean enabled = false;
-    private static boolean audienceTarget = true;
+    private static boolean rightHive = true;
     private static final double SHOOTER_CENTER_OFFSET = Math.PI; // turret zero points at robot rear
+    private static final double MIN_TRACK_DISTANCE = 5;
+
+    // Hysteresis on the hive switch so the aim does not flap near the midline.
+    private static final double SWITCH_TO_LEFT_Y = 73;
+    private static final double SWITCH_TO_RIGHT_Y = 71;
     private static final double MAX_RANGE = Math.toRadians((double) (360 * 3) / 4 - 10);
 
     private static boolean sotmEnabled = true;
@@ -53,19 +58,16 @@ public class Tracker implements Subsystem {
         setTrackPose(new Pose(x, y));
     }
 
-    private static Pose selectTrackPose(Pose robotPose) {
-        if (audienceTarget) {
-            if (robotPose.y() > 73) {
-                audienceTarget = false;
+    private static Pose selectHivePose(Pose robotPose) {
+        if (rightHive) {
+            if (robotPose.y() > SWITCH_TO_LEFT_Y) {
+                rightHive = false;
             }
-        } else if (robotPose.y() < 71) {
-            audienceTarget = true;
+        } else if (robotPose.y() < SWITCH_TO_RIGHT_Y) {
+            rightHive = true;
         }
 
-        if (Robot.alliance == Robot.Alliance.RED) {
-            return audienceTarget ? HivePoses.RED_AUDIENCE : HivePoses.RED_FAR;
-        }
-        return audienceTarget ? HivePoses.BLUE_AUDIENCE : HivePoses.BLUE_FAR;
+        return rightHive ? HivePoses.RIGHT : HivePoses.LEFT;
     }
 
     public static void setSOTM(double offset) {
@@ -116,7 +118,9 @@ public class Tracker implements Subsystem {
     public void init() {
         enabled = false;
         hasComputed = false;
-        audienceTarget = true;
+        rightHive = true;
+        lastTrackAngle = 0;
+        lastVelocity = 0;
     }
 
     @Override
@@ -126,7 +130,7 @@ public class Tracker implements Subsystem {
         }
 
         Pose robotPose = Robot.follower.pose();
-        setTrackPose(selectTrackPose(robotPose));
+        setTrackPose(selectHivePose(robotPose));
 
         if (hasComputed && periodSec > 0 && timer.seconds() < periodSec) {
             return;
@@ -134,6 +138,14 @@ public class Tracker implements Subsystem {
 
         double dx = trackPose.x() - robotPose.x();
         double dy = trackPose.y() - robotPose.y();
+
+        double dist = Math.hypot(dx, dy);
+        hasComputed = true;
+        timer.reset();
+
+        if (dist <= MIN_TRACK_DISTANCE) {
+            return;
+        }
 
         double bearing = wrapAngle(Math.atan2(dy, dx) - robotPose.heading());
         double angle = SHOOTER_CENTER_OFFSET - bearing;
@@ -148,17 +160,16 @@ public class Tracker implements Subsystem {
         angle = Math.max(-MAX_RANGE / 2, Math.min(MAX_RANGE / 2, angle));
 
         lastTrackAngle = angle;
-
-        double dist = Math.hypot(dx, dy);
         lastVelocity = computeVelocity(dist);
         angleVersion++;
-        hasComputed = true;
-        timer.reset();
     }
 
     @Override
     public void reset() {
         hasComputed = false;
+        rightHive = true;
+        lastTrackAngle = 0;
+        lastVelocity = 0;
     }
 
     @Override

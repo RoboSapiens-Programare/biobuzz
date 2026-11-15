@@ -56,7 +56,7 @@ public class OuttakeTesterOpMode extends RobotOpMode {
                     RobotCommands.fireShooter(robot.outtake, robot.intake).schedule();
                     break;
                 case STOP_FIRING:
-                    RobotCommands.stopFiring(robot.outtake, robot.intake).schedule();
+                    RobotCommands.safeStop(robot.outtake, robot.intake).schedule();
                     break;
             }
         }
@@ -81,7 +81,7 @@ public class OuttakeTesterOpMode extends RobotOpMode {
 
     @Override
     protected void onStop() {
-        RobotCommands.stopFiring(robot.outtake, robot.intake).schedule();
+        RobotCommands.safeStop(robot.outtake, robot.intake).schedule();
         RobotCommands.idleShooter(robot.outtake).schedule();
     }
 

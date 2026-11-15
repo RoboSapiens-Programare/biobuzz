@@ -13,10 +13,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 // import dev.frozenmilk.dairy.pasteurized.Pasteurized;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.commands.RobotCommands;
 import org.firstinspires.ftc.teamcode.robot.FileTelemetry.FileTelemetry;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
@@ -47,8 +50,9 @@ public class TeleOP extends RobotOpMode {
 
     private CachingDcMotorEx front_left, front_right, rear_left, rear_right, roller, flywheel;
     private VoltageSensor myExpansionHubVoltageSensor;
+    private FileTelemetry tuningLog;
+    private String tuningError = "";
 
-    private boolean firing;
     private boolean lastFire, lastPull, lastPush;
     private String driveCurrentFLFR = "",
             driveCurrentRLRR = "",
@@ -57,8 +61,6 @@ public class TeleOP extends RobotOpMode {
             intakeMax = "";
 
     private double tuningVelocity = 1100;
-    private FileTelemetry tuningLog;
-    private String tuningError = "";
 
     private static boolean onRise(boolean now, boolean last) {
         return now && !last;
@@ -73,15 +75,10 @@ public class TeleOP extends RobotOpMode {
 
         Tracker.setTrackingFrequency(state == States.OUTTAKE ? TRACKING_HZ_OUTTAKE : TRACKING_HZ_INTAKE);
 
-        switch (state) {
-            case INTAKE:
-                robot.outtake.setFiring(false);
-                robot.outtake.startIdling();
-                robot.intake.idle();
-                break;
-            case OUTTAKE:
-                robot.outtake.stopIdling();
-                break;
+        if (state == States.INTAKE) {
+            RobotCommands.safeStop(robot.outtake, robot.intake).schedule();
+        } else {
+            RobotCommands.spoolShooter(robot.outtake).schedule();
         }
 
         // Require the triggers to be released and pressed again after a state change.
@@ -90,7 +87,6 @@ public class TeleOP extends RobotOpMode {
         lastFire = rightHeld;
         lastPull = rightHeld && !leftHeld;
         lastPush = leftHeld && !rightHeld;
-        firing = false;
 
         debounceTimer.reset();
     }
@@ -113,8 +109,6 @@ public class TeleOP extends RobotOpMode {
 
         robot.setLLLocatorEnabled(false);
 
-        follower.setPose(new Pose(7.2, 8, Math.PI / 2));
-
         // Set initial state actions safely on init
         changeState(States.INTAKE);
 
@@ -122,22 +116,6 @@ public class TeleOP extends RobotOpMode {
             robot.outtake.setVelocity(tuningVelocity);
             ensureTuningLog();
         }
-    }
-
-    @Override
-    protected void onInitLoop() {
-        if (gamepad1.touchpad && debounceTimer.milliseconds() > 100) {
-            debounceTimer.reset();
-            Robot.alliance = Robot.alliance == Robot.Alliance.BLUE ? Robot.Alliance.RED : Robot.Alliance.BLUE;
-            gamepad1.rumble(10);
-            gamepad1.setLedColor(
-                    Robot.alliance == Robot.Alliance.RED ? 255 : 0,
-                    0,
-                    Robot.alliance == Robot.Alliance.BLUE ? 255 : 0,
-                    0);
-        }
-
-        telemetry.addData("Alliance", Robot.alliance);
     }
 
     @Override
@@ -198,13 +176,13 @@ public class TeleOP extends RobotOpMode {
                 boolean pushHeld = leftHeld && !rightHeld;
 
                 if (onRise(pullHeld, lastPull)) {
-                    robot.intake.pullBalls();
+                    RobotCommands.pullBalls(robot.intake).schedule();
                 }
                 if (onRise(pushHeld, lastPush)) {
-                    robot.intake.pushBalls();
+                    RobotCommands.pushBalls(robot.intake).schedule();
                 }
                 if ((onDrop(pullHeld, lastPull) || onDrop(pushHeld, lastPush)) && !pullHeld && !pushHeld) {
-                    robot.intake.idle();
+                    RobotCommands.idleIntake(robot.intake).schedule();
                 }
 
                 lastPull = pullHeld;
@@ -214,23 +192,13 @@ public class TeleOP extends RobotOpMode {
 
             case OUTTAKE: {
                 if (onRise(rightHeld, lastFire)) {
-                    robot.outtake.setFiring(true);
-                    firing = true;
-                } else if (onDrop(rightHeld, lastFire) && firing) {
-                    robot.outtake.setFiring(false);
-                    robot.outtake.startIdling();
-                    robot.intake.idle();
-                    if (!Robot.TUNING)
-                        state = States.INTAKE;
-                    firing = false;
-                }
-
-                if (firing) {
-                    if (robot.outtake.shootReady()) {
-                        robot.intake.pullBalls();
-                    } else {
-                        robot.intake.idle();
-                    }
+                    RobotCommands.fireWhileHeld(
+                                    robot.outtake,
+                                    robot.intake,
+                                    () -> state == States.OUTTAKE && gamepad1.right_trigger > 0.1)
+                            .schedule();
+                } else if (onDrop(rightHeld, lastFire) && robot.outtake.isFiring()) {
+                    changeState(States.INTAKE);
                 }
 
                 lastFire = rightHeld;

@@ -27,12 +27,6 @@ public class Robot {
 
     private static List<LynxModule> allHubs = Collections.emptyList();
 
-    public enum Alliance {
-        RED,
-        BLUE
-    };
-
-    public static Alliance alliance = Alliance.BLUE;
     public static boolean TUNING = false;
     //    public static Pose transitionPose = new Pose(63, 9, Math.PI / 2);
 
