@@ -1,9 +1,19 @@
-name: Maven Spotless Check
+name: Spotless Check
 
 on:
-  push: [master]
-  pull_request: [master]
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
 
 jobs:
-  spotless-check:
-    uses: mekomsolutions/shared-github-workflow/.github/workflows/maven-spotless-check.yml@main
+  spotless:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+          cache: "gradle"
+      - run: chmod +x ./gradlew && ./gradlew spotlessCheck
