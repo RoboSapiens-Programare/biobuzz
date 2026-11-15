@@ -71,6 +71,16 @@ public abstract class RobotOpMode extends OpMode {
     @Override
     public final void init_loop() {
         onInitLoop();
+
+        addLoopTelemetry(telemetry);
+        if (pTelemetry != telemetry) {
+            addLoopTelemetry(pTelemetry);
+        }
+
+        telemetry.update();
+        if (pTelemetry != telemetry) {
+            pTelemetry.update();
+        }
     }
 
     @Override

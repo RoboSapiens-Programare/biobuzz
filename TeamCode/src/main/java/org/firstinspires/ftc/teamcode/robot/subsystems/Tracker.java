@@ -17,6 +17,7 @@ public class Tracker implements Subsystem {
     private static boolean enabled = false;
     private static boolean audienceTarget = true;
     private static final double SHOOTER_CENTER_OFFSET = Math.PI; // turret zero points at robot rear
+    private static final double MAX_RANGE = Math.toRadians((double) (360 * 3) / 4 - 10);
 
     private static boolean sotmEnabled = true;
     private static double sotmOffset = 0;
@@ -144,7 +145,7 @@ public class Tracker implements Subsystem {
             angle = wrapAngle(angle + sotmOffset);
         }
 
-        angle = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, angle));
+        angle = Math.max(-MAX_RANGE / 2, Math.min(MAX_RANGE / 2, angle));
 
         lastTrackAngle = angle;
 
