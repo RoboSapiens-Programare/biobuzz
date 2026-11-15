@@ -50,6 +50,8 @@ public class TeleOP extends RobotOpMode {
 
     private CachingDcMotorEx front_left, front_right, rear_left, rear_right, roller, flywheel;
     private VoltageSensor myExpansionHubVoltageSensor;
+    private FileTelemetry tuningLog;
+    private String tuningError = "";
 
     private boolean lastFire, lastPull, lastPush;
     private String driveCurrentFLFR = "",
@@ -59,8 +61,6 @@ public class TeleOP extends RobotOpMode {
             intakeMax = "";
 
     private double tuningVelocity = 1100;
-    private FileTelemetry tuningLog;
-    private String tuningError = "";
 
     private static boolean onRise(boolean now, boolean last) {
         return now && !last;
@@ -114,8 +114,7 @@ public class TeleOP extends RobotOpMode {
 
         if (Robot.TUNING) {
             robot.outtake.setVelocity(tuningVelocity);
-            tuningFile = tuningFileForToday();
-            tuningSnapshotCount = loadTuningPoints(tuningFile).length();
+            ensureTuningLog();
         }
     }
 
