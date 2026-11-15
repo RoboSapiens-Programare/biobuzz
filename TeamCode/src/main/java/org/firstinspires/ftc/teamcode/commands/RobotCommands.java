@@ -3,7 +3,10 @@ package org.firstinspires.ftc.teamcode.commands;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.commands.Commands;
 import java.util.function.BooleanSupplier;
+
+import org.firstinspires.ftc.teamcode.Prism.Color;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.robot.subsystems.LEDDriver;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Outtake;
 
 /**
@@ -29,18 +32,24 @@ public final class RobotCommands {
      * Fires until interrupted, feeding only when the shooter reports ready.
      * Interrupted by {@link #safeStop(Outtake, Intake)}.
      */
-    public static Command fireShooter(Outtake outtake, Intake intake) {
-        return fireWhileHeld(outtake, intake, () -> true);
+    public static Command fireShooter(Outtake outtake, Intake intake, LEDDriver ledDriver) {
+        return fireWhileHeld(outtake, intake, ledDriver, () -> true);
     }
 
     /** Fires while {@code held} is true and cleans up as soon as it is released. */
-    public static Command fireWhileHeld(Outtake outtake, Intake intake, BooleanSupplier held) {
+    public static Command fireWhileHeld(Outtake outtake, Intake intake, LEDDriver ledDriver, BooleanSupplier held) {
         return Command.build()
-                .setStart(() -> outtake.setFiring(true))
+                .setStart(() -> {
+                    outtake.setFiring(true);
+                    ledDriver.setColor(Color.RED);
+                })
                 .setExecute(() -> feed(outtake, intake))
                 .setDone(() -> !held.getAsBoolean())
-                .setEnd(endCondition -> stopFiringNow(outtake, intake))
-                .requiring(outtake, intake);
+                .setEnd(endCondition -> {
+                    stopFiringNow(outtake, intake);
+                    ledDriver.playSweep();
+                })
+                .requiring(outtake, intake, ledDriver);
     }
 
     /**

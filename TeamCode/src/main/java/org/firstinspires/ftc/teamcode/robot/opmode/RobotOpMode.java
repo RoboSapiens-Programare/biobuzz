@@ -36,9 +36,6 @@ public abstract class RobotOpMode extends OpMode {
         return telemetryDue;
     }
 
-    protected boolean shouldExecuteScheduler() {
-        return true;
-    }
 
     /** Called once in init(). Override for setup. */
     protected void onInit() {}
@@ -72,11 +69,6 @@ public abstract class RobotOpMode extends OpMode {
     public final void init_loop() {
         onInitLoop();
 
-        addLoopTelemetry(telemetry);
-        if (pTelemetry != telemetry) {
-            addLoopTelemetry(pTelemetry);
-        }
-
         telemetry.update();
         if (pTelemetry != telemetry) {
             pTelemetry.update();
@@ -102,9 +94,7 @@ public abstract class RobotOpMode extends OpMode {
 
         onUpdate();
 
-        if (shouldExecuteScheduler()) {
-            Scheduler.execute();
-        }
+        Scheduler.execute();
 
         robot.update();
 

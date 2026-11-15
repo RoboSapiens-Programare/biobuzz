@@ -26,6 +26,7 @@ import org.firstinspires.ftc.teamcode.robot.subsystems.Tracker;
 @TeleOp
 @Configurable
 public class TeleOP extends RobotOpMode {
+
     public static final boolean COMPETITION = false;
 
     private static final double TRACKING_HZ_INTAKE = 30;
@@ -33,7 +34,7 @@ public class TeleOP extends RobotOpMode {
 
     {
         panelsTelemetry = !COMPETITION;
-        telemetryHz = COMPETITION ? 10 : 20;
+        telemetryHz = 10;
     }
 
     private enum States {
@@ -46,7 +47,7 @@ public class TeleOP extends RobotOpMode {
 
     private final ElapsedTime debounceTimer = new ElapsedTime();
 
-    private CachingDcMotorEx front_left, front_right, rear_left, rear_right, roller, flywheel;
+    private CachingDcMotorEx front_left, front_right, rear_left, rear_right, roller1, roller2, flywheel;
     private VoltageSensor myExpansionHubVoltageSensor;
     private FileTelemetry tuningLog;
     private String tuningError = "";
@@ -54,7 +55,8 @@ public class TeleOP extends RobotOpMode {
     private boolean lastFire, lastPull, lastPush;
     private String driveCurrentFLFR = "",
             driveCurrentRLRR = "",
-            rollerCurrent = "",
+            roller1Current = "",
+            roller2Current = "",
             flywheelCurrent = "",
             intakeMax = "";
 
@@ -100,7 +102,8 @@ public class TeleOP extends RobotOpMode {
         front_right = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "front_right"));
         rear_left = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "rear_left"));
         rear_right = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "rear_right"));
-        roller = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "roller_motor"));
+        roller1 = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "roller_motor"));
+        roller2 = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "roller_motor_2"));
         flywheel = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel"));
 
         myExpansionHubVoltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
@@ -108,12 +111,15 @@ public class TeleOP extends RobotOpMode {
         robot.setLLLocatorEnabled(false);
 
         // Set initial state actions safely on init
+        follower.setPose(new Pose(7.2, 8, Math.PI/2));
         changeState(States.INTAKE);
 
         if (Robot.TUNING) {
             robot.outtake.setVelocity(tuningVelocity);
             ensureTuningLog();
         }
+
+        robot.ledDriver.playSweep();
     }
 
     @Override
@@ -121,11 +127,6 @@ public class TeleOP extends RobotOpMode {
         Tracker.setEnabled(true);
         Tracker.setTrackingFrequency(state == States.OUTTAKE ? TRACKING_HZ_OUTTAKE : TRACKING_HZ_INTAKE);
         debounceTimer.reset();
-    }
-
-    @Override
-    protected boolean shouldExecuteScheduler() {
-        return false;
     }
 
     @Override
@@ -192,6 +193,7 @@ public class TeleOP extends RobotOpMode {
                     RobotCommands.fireWhileHeld(
                                     robot.outtake,
                                     robot.intake,
+                                    robot.ledDriver,
                                     () -> state == States.OUTTAKE && gamepad1.right_trigger > 0.1)
                             .schedule();
                 } else if (onDrop(rightHeld, lastFire) && robot.outtake.isFiring()) {
@@ -224,7 +226,8 @@ public class TeleOP extends RobotOpMode {
                     "%.2f / %.2f", front_left.getCurrent(CurrentUnit.AMPS), front_right.getCurrent(CurrentUnit.AMPS));
             driveCurrentRLRR = String.format(
                     "%.2f / %.2f", rear_left.getCurrent(CurrentUnit.AMPS), rear_right.getCurrent(CurrentUnit.AMPS));
-            rollerCurrent = String.format("%.2f", roller.getCurrent(CurrentUnit.AMPS));
+            roller1Current = String.format("%.2f", roller1.getCurrent(CurrentUnit.AMPS));
+            roller2Current = String.format("%.2f", roller2.getCurrent(CurrentUnit.AMPS));
             flywheelCurrent = String.format("%.2f", flywheel.getCurrent(CurrentUnit.AMPS));
             intakeMax = String.format("%.2f", robot.intake.getMaxCurrent());
 
@@ -233,9 +236,14 @@ public class TeleOP extends RobotOpMode {
             pTelemetry.addData("RL / RR (A)", driveCurrentRLRR);
 
             pTelemetry.addLine("== Diagnostics ==");
-            pTelemetry.addData("Roller current (A)", rollerCurrent);
+            pTelemetry.addData("Roller 1 current (A)", roller1Current);
+            pTelemetry.addData("Roller 2 current (A)", roller2Current);
             pTelemetry.addData("Flywheel current (A)", flywheelCurrent);
             pTelemetry.addData("Intake max (A)", intakeMax);
+
+            pTelemetry.addLine("== Gamepad ==");
+            pTelemetry.addData("Right Held", rightHeld);
+            pTelemetry.addData("Left Held", leftHeld);
 
             if (Robot.TUNING) {
                 pTelemetry.addLine("== Tuning ==");

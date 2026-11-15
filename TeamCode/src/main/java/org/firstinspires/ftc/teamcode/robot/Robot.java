@@ -7,13 +7,14 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import java.util.Collections;
 import java.util.List;
+
+import org.firstinspires.ftc.teamcode.opmodes.tests.LEDSnakeTest;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.robot.subsystems.LEDDriver;
 import org.firstinspires.ftc.teamcode.robot.subsystems.LLLocator;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Outtake;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Tracker;
-
-// this is a test comment to trigger the worflow
 
 @Configurable
 public class Robot {
@@ -21,6 +22,7 @@ public class Robot {
     public Intake intake;
     public LLLocator llLocator;
     public Tracker tracker;
+    public LEDDriver ledDriver;
     private final ElapsedTime headlightTimer = new ElapsedTime();
 
     public static Follower follower;
@@ -47,6 +49,8 @@ public class Robot {
         tracker = new Tracker();
         outtake.setTracker(tracker);
 
+        ledDriver = new LEDDriver(hwMap);
+
         follower = Constants.create(hwMap);
     }
 
@@ -69,6 +73,8 @@ public class Robot {
         tracker.update();
         intake.update();
         outtake.update();
+        ledDriver.update();
+
         if (llLocatorEnabled) {
             llLocator.update();
         }
@@ -79,6 +85,7 @@ public class Robot {
         outtake.init();
         llLocator.init();
         tracker.init();
+        ledDriver.init();
 
         outtake.setTracker(tracker);
     }
@@ -88,5 +95,6 @@ public class Robot {
         outtake.stop();
         llLocator.stop();
         tracker.stop();
+        ledDriver.stop();
     }
 }
