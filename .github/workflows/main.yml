@@ -26,4 +26,4 @@ jobs:
           java-version: '21'
           cache: 'gradle'
 
-      - run: chmod +x ./gradlew && ./gradlew :TeamCode:spotlessCheck && echo ok
+      - run: chmod +x ./gradlew && ./gradlew :TeamCode:spotlessCheck
