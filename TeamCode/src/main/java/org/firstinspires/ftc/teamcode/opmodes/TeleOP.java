@@ -125,19 +125,6 @@ public class TeleOP extends RobotOpMode {
     }
 
     @Override
-    protected void onInitLoop() {
-        if (gamepad1.touchpadWasPressed()) {
-            Robot.alliance = Robot.alliance == Robot.Alliance.BLUE ? Robot.Alliance.RED : Robot.Alliance.BLUE;
-            gamepad1.rumble(10);
-            gamepad1.setLedColor(
-                    Robot.alliance == Robot.Alliance.RED ? 255 : 0,
-                    0,
-                    Robot.alliance == Robot.Alliance.BLUE ? 255 : 0,
-                    0);
-        }
-    }
-
-    @Override
     protected void onStart() {
         Tracker.setEnabled(true);
         Tracker.setTrackingFrequency(state == States.OUTTAKE ? TRACKING_HZ_OUTTAKE : TRACKING_HZ_INTAKE);

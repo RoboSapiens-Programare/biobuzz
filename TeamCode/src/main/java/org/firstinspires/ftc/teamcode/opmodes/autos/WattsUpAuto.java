@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.opmodes.autos;
 
-import static com.pedropathing.api.Paths.*;
 import static com.pedropathing.ivy.Scheduler.schedule;
 import static com.pedropathing.ivy.commands.Commands.*;
 import static com.pedropathing.ivy.groups.Groups.sequential;
@@ -17,8 +16,8 @@ import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Tracker;
 
-@Autonomous(name = "RED auto", group = "Autonomous")
-public class RedAuto extends RobotOpMode {
+@Autonomous(name = "WATTs UP auto", group = "Autonomous")
+public class WattsUpAuto extends RobotOpMode {
 
     private final PoseFactory poseFactory = PoseFactory.degrees();
 
@@ -36,40 +35,29 @@ public class RedAuto extends RobotOpMode {
     public Command autoRoutine() {
         return sequential(
                 RobotCommands.fireWhileHeld(robot.outtake, robot.intake, () -> robot.intake.getBallCount() > 0),
-
                 follow(Robot.follower, goGrabGarden()),
                 instant(() -> Tracker.setTrackingFrequency(30)),
                 RobotCommands.pullBalls(robot.intake),
-
                 follow(Robot.follower, grabGarden()),
                 RobotCommands.intakeTimeout(robot.intake, 1000),
                 RobotCommands.idleIntake(robot.intake),
                 instant(() -> Tracker.setTrackingFrequency(80)),
-
                 follow(Robot.follower, shootOne()),
                 RobotCommands.fireWhileHeld(robot.outtake, robot.intake, () -> robot.intake.getBallCount() > 0),
-
                 instant(() -> Tracker.setTrackingFrequency(30)),
                 RobotCommands.lowerFlower(robot.intake),
                 RobotCommands.pullBalls(robot.intake),
-
                 follow(Robot.follower, grabFlower()),
-
                 instant(() -> Tracker.setTrackingFrequency(80)),
                 RobotCommands.intakeTimeout(robot.intake, 1000),
                 RobotCommands.idleIntake(robot.intake),
-
                 RobotCommands.fireWhileHeld(robot.outtake, robot.intake, () -> robot.intake.getBallCount() > 0),
-
                 follow(Robot.follower, end()),
-                RobotCommands.raiseFlower(robot.intake)
-        );
+                RobotCommands.raiseFlower(robot.intake));
     }
 
     @Override
     protected void onInit() {
-        Robot.alliance = Robot.Alliance.RED;
-
         Robot.follower.setPose(start);
 
         Tracker.setEnabled(true);
