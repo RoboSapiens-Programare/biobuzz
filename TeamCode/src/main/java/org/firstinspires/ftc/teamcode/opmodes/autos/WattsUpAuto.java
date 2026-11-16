@@ -21,15 +21,14 @@ public class WattsUpAuto extends RobotOpMode {
 
     private final PoseFactory poseFactory = PoseFactory.degrees();
 
-    private final Pose start = poseFactory.of(54.5, 8, -90);
+    private final Pose start = poseFactory.of(54.5, 8, 90);
     private final Pose goGrabGarden = poseFactory.of(8, 13, -90);
-    private final Pose grabGarden = poseFactory.of(8, 8, -90);
-    private final Pose shootOneStart = poseFactory.of(8, 8, -90);
-    private final Pose shootOne = poseFactory.of(46.7, 125, 90);
+    private final Pose grabGarden = poseFactory.of(8, 8, 90);
+    private final Pose shootOne = poseFactory.of(46.7, 125, -172.8964);
     private final Pose shootOneControl1 = poseFactory.of(16.2281, 121.2026, 0);
-    private final Pose grabFlower = poseFactory.of(46.7, 130, 90);
-    private final Pose endStart = poseFactory.of(46.7, 130, 90);
-    private final Pose end = poseFactory.of(60.2544, 120, 0);
+    private final Pose grabFlower = poseFactory.of(46.7, 130, -90);
+    private final Pose parkStart = poseFactory.of(46.7, 130, 90);
+    private final Pose park = poseFactory.of(10.6891, 114.5117, 0);
 
     // Autonomous routine
     public Command autoRoutine() {
@@ -55,7 +54,7 @@ public class WattsUpAuto extends RobotOpMode {
                 RobotCommands.idleIntake(robot.intake),
                 RobotCommands.fireWhileHeld(
                         robot.outtake, robot.intake, robot.ledDriver, () -> robot.intake.getBallCount() > 0),
-                follow(Robot.follower, end()),
+                follow(Robot.follower, park()),
                 RobotCommands.raiseFlower(robot.intake));
     }
 
@@ -65,6 +64,8 @@ public class WattsUpAuto extends RobotOpMode {
 
         Tracker.setEnabled(true);
         Tracker.setTrackingFrequency(80);
+
+        robot.outtake.aimAt(0);
 
         schedule(autoRoutine());
     }
@@ -82,18 +83,19 @@ public class WattsUpAuto extends RobotOpMode {
     }
 
     public Path grabGarden() {
-        return Paths.line(goGrabGarden, grabGarden).constant(grabGarden);
+        return Paths.line(goGrabGarden, grabGarden).reverseTangent();
     }
 
     public Path shootOne() {
-        return Paths.curve(shootOneStart, shootOneControl1, shootOne).linear(shootOneStart, shootOne);
+        return Paths.curve(grabGarden, shootOneControl1, shootOne).reverseTangent();
     }
 
     public Path grabFlower() {
-        return Paths.line(shootOne, grabFlower).constant(grabFlower);
+        return Paths.line(shootOne, grabFlower).reverseTangent();
     }
 
-    public Path end() {
-        return Paths.line(endStart, end).linear(endStart, end);
+    public Path park() {
+        return Paths.line(parkStart, park).linear(parkStart, park);
     }
+
 }
