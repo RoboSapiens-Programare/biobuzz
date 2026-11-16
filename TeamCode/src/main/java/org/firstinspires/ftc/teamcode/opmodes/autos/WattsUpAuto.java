@@ -23,10 +23,12 @@ public class WattsUpAuto extends RobotOpMode {
 
     private final Pose start = poseFactory.of(54.5, 8, 90);
     private final Pose goGrabGarden = poseFactory.of(8, 13, -90);
-    private final Pose grabGarden = poseFactory.of(8, 8, 90);
-    private final Pose shootOne = poseFactory.of(46.7, 125, -172.8964);
-    private final Pose shootOneControl1 = poseFactory.of(16.2281, 121.2026, 0);
-    private final Pose grabFlower = poseFactory.of(46.7, 130, -90);
+    private final Pose grabGarden = poseFactory.of(8, 8, -90);
+    private final Pose shootOneStart = poseFactory.of(8, 8, -90);
+    private final Pose shootOne = poseFactory.of(46.7, 125, 90);
+    private final Pose shootOneControl1 = poseFactory.of(21.7309, 22.1526, 0);
+    private final Pose shootOneControl2 = poseFactory.of(28.3256, 99.6044, 0);
+    private final Pose grabFlower = poseFactory.of(46.7, 130, 90);
     private final Pose parkStart = poseFactory.of(46.7, 130, 90);
     private final Pose park = poseFactory.of(10.6891, 114.5117, 0);
 
@@ -83,15 +85,15 @@ public class WattsUpAuto extends RobotOpMode {
     }
 
     public Path grabGarden() {
-        return Paths.line(goGrabGarden, grabGarden).reverseTangent();
+        return Paths.line(goGrabGarden, grabGarden).constant(grabGarden);
     }
 
     public Path shootOne() {
-        return Paths.curve(grabGarden, shootOneControl1, shootOne).reverseTangent();
+        return Paths.curve(shootOneStart, shootOneControl1, shootOneControl2, shootOne).linear(shootOneStart, shootOne);
     }
 
     public Path grabFlower() {
-        return Paths.line(shootOne, grabFlower).reverseTangent();
+        return Paths.line(shootOne, grabFlower).constant(grabFlower);
     }
 
     public Path park() {
