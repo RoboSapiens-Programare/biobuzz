@@ -2,13 +2,13 @@ name: Spotless Check
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "main", "master", "develop" ]
     paths:
       - 'TeamCode/**'
       - 'build.gradle'
       - 'settings.gradle'
   pull_request:
-    branches: [ master ]
+    branches: [ "main", "master", "develop" ]
     paths:
       - 'TeamCode/**'
       - 'build.gradle'
