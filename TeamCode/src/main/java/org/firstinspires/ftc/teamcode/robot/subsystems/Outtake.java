@@ -66,10 +66,7 @@ public class Outtake implements Subsystem {
     }
 
     @Override
-    public void init() {
-        aimAt(0);
-        setGate(GATE_CLOSED);
-    }
+    public void init() {}
 
     @Override
     public void update() {
@@ -145,8 +142,7 @@ public class Outtake implements Subsystem {
     }
 
     public boolean shootReady() {
-        //        return flywheel.velocityReached();
-        return true;
+        return flywheel.velocityReached();
     }
 
     public void startIdling() {
