@@ -97,5 +97,4 @@ public class WattsUpAuto extends RobotOpMode {
     public Path park() {
         return Paths.line(parkStart, park).linear(parkStart, park);
     }
-
 }
