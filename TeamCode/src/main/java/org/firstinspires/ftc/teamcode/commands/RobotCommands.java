@@ -65,7 +65,7 @@ public final class RobotCommands {
 
     private static void feed(Outtake outtake, Intake intake) {
         if (outtake.shootReady()) {
-            intake.pullBalls();
+            intake.pullBalls(true);
         } else {
             intake.idle();
         }
