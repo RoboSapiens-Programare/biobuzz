@@ -36,7 +36,6 @@ public abstract class RobotOpMode extends OpMode {
         return telemetryDue;
     }
 
-
     /** Called once in init(). Override for setup. */
     protected void onInit() {}
 

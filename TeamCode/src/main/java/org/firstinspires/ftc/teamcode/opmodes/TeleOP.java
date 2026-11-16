@@ -111,7 +111,7 @@ public class TeleOP extends RobotOpMode {
         robot.setLLLocatorEnabled(false);
 
         // Set initial state actions safely on init
-        follower.setPose(new Pose(7.2, 8, Math.PI/2));
+        follower.setPose(new Pose(7.2, 8, Math.PI / 2));
         changeState(States.INTAKE);
 
         if (Robot.TUNING) {

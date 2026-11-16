@@ -2,11 +2,9 @@ package org.firstinspires.ftc.teamcode.robot.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.mechanisms.Roller;
 
 @Configurable
@@ -19,14 +17,14 @@ public class Intake implements Subsystem {
 
     private final Roller rollerOne = new Roller();
     private final Roller rollerTwo = new Roller();
-//    private final DistanceSensor pollenOneSensor;
-//    private final DistanceSensor pollenThreeSensor;
+    //    private final DistanceSensor pollenOneSensor;
+    //    private final DistanceSensor pollenThreeSensor;
 
     private static final long SENSOR_POLL_MS = 200;
 
     private final ElapsedTime sensorTimer = new ElapsedTime();
 
-     private double pollenOneDistance = Double.POSITIVE_INFINITY;
+    private double pollenOneDistance = Double.POSITIVE_INFINITY;
     private double pollenThreeDistance = Double.POSITIVE_INFINITY;
     private Mode mode = Mode.IDLE;
     private boolean modeChanged = true;
@@ -44,8 +42,8 @@ public class Intake implements Subsystem {
         rollerOne.setPower(PULL_POWER);
         rollerTwo.setPower(PULL_POWER);
 
-//        pollenOneSensor = hwMap.get(DistanceSensor.class, "pollen_one_sensor");
-//        pollenThreeSensor = hwMap.get(DistanceSensor.class, "pollen_three_sensor");
+        //        pollenOneSensor = hwMap.get(DistanceSensor.class, "pollen_one_sensor");
+        //        pollenThreeSensor = hwMap.get(DistanceSensor.class, "pollen_three_sensor");
 
         flower = hwMap.get(Servo.class, "flower_servo");
     }
@@ -91,16 +89,16 @@ public class Intake implements Subsystem {
 
     @Override
     public void update() {
-//        if (sensorTimer.milliseconds() > SENSOR_POLL_MS) {
-//            pollenOneDistance = pollenOneSensor.getDistance(DistanceUnit.CM);
-//            pollenThreeDistance = pollenThreeSensor.getDistance(DistanceUnit.CM);
-//
-//            sensorTimer.reset();
-//        }
+        //        if (sensorTimer.milliseconds() > SENSOR_POLL_MS) {
+        //            pollenOneDistance = pollenOneSensor.getDistance(DistanceUnit.CM);
+        //            pollenThreeDistance = pollenThreeSensor.getDistance(DistanceUnit.CM);
+        //
+        //            sensorTimer.reset();
+        //        }
 
-//        boolean staged = pollenOneDistance < MIN_DISTANCE;
-//        if (rollerTwo.getMaxCurrent() > maxCurrentRollerTwo) {
-//        }
+        //        boolean staged = pollenOneDistance < MIN_DISTANCE;
+        //        if (rollerTwo.getMaxCurrent() > maxCurrentRollerTwo) {
+        //        }
         applyMode(false);
 
         rollerOne.update();
