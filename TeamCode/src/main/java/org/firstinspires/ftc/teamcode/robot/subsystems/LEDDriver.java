@@ -18,7 +18,6 @@ public class LEDDriver implements Subsystem {
     public LEDDriver(HardwareMap hwMap) {
         driver = hwMap.get(GoBildaPrismDriver.class, "prism");
         driver.setStripLength(12);
-
     }
 
     public void setColor(Color color) {

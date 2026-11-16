@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.commands;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.commands.Commands;
 import java.util.function.BooleanSupplier;
-
 import org.firstinspires.ftc.teamcode.Prism.Color;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.robot.subsystems.LEDDriver;
@@ -66,7 +65,7 @@ public final class RobotCommands {
 
     private static void feed(Outtake outtake, Intake intake) {
         if (outtake.shootReady()) {
-            intake.pullBalls();
+            intake.pullBalls(true);
         } else {
             intake.idle();
         }

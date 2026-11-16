@@ -19,21 +19,21 @@ public class Intake implements Subsystem {
 
     private final Roller rollerOne = new Roller();
     private final Roller rollerTwo = new Roller();
-//    private final DistanceSensor pollenOneSensor;
-//    private final DistanceSensor pollenThreeSensor;
+
+    private final DistanceSensor pollenOneSensor;
+    private final DistanceSensor pollenThreeSensor;
 
     private static final long SENSOR_POLL_MS = 200;
 
     private final ElapsedTime sensorTimer = new ElapsedTime();
 
-     private double pollenOneDistance = Double.POSITIVE_INFINITY;
+    private double pollenOneDistance = Double.POSITIVE_INFINITY;
     private double pollenThreeDistance = Double.POSITIVE_INFINITY;
     private Mode mode = Mode.IDLE;
-    private boolean modeChanged = true;
-    private double maxCurrentRollerTwo = 0;
 
     public static double MIN_DISTANCE = 5;
-    public static double PULL_POWER = 0.72;
+    public static double PULL_POWER = 0.86;
+    private boolean force = false;
 
     private final Servo flower;
 
@@ -44,25 +44,29 @@ public class Intake implements Subsystem {
         rollerOne.setPower(PULL_POWER);
         rollerTwo.setPower(PULL_POWER);
 
-//        pollenOneSensor = hwMap.get(DistanceSensor.class, "pollen_one_sensor");
-//        pollenThreeSensor = hwMap.get(DistanceSensor.class, "pollen_three_sensor");
+        pollenOneSensor = hwMap.get(DistanceSensor.class, "pollen_one_sensor");
+        pollenThreeSensor = hwMap.get(DistanceSensor.class, "pollen_three_sensor");
 
         flower = hwMap.get(Servo.class, "flower_servo");
     }
 
     public void pullBalls() {
+        pullBalls(false);
+    }
+
+    public void pullBalls(boolean force) {
         mode = Mode.PULL;
-        modeChanged = true;
+        this.force = force;
     }
 
     public void pushBalls() {
         mode = Mode.PUSH;
-        modeChanged = true;
+        force = false;
     }
 
     public void idle() {
         mode = Mode.IDLE;
-        modeChanged = true;
+        force = false;
     }
 
     public void lowerFlower() {
@@ -91,17 +95,15 @@ public class Intake implements Subsystem {
 
     @Override
     public void update() {
-//        if (sensorTimer.milliseconds() > SENSOR_POLL_MS) {
-//            pollenOneDistance = pollenOneSensor.getDistance(DistanceUnit.CM);
-//            pollenThreeDistance = pollenThreeSensor.getDistance(DistanceUnit.CM);
-//
-//            sensorTimer.reset();
-//        }
+        if (sensorTimer.milliseconds() > SENSOR_POLL_MS) {
+            pollenOneDistance = pollenOneSensor.getDistance(DistanceUnit.CM);
+            pollenThreeDistance = pollenThreeSensor.getDistance(DistanceUnit.CM);
 
-//        boolean staged = pollenOneDistance < MIN_DISTANCE;
-//        if (rollerTwo.getMaxCurrent() > maxCurrentRollerTwo) {
-//        }
-        applyMode(false);
+            sensorTimer.reset();
+        }
+
+        boolean staged = pollenOneDistance < MIN_DISTANCE && pollenThreeDistance < MIN_DISTANCE;
+        applyMode(staged);
 
         rollerOne.update();
         rollerTwo.update();
@@ -110,10 +112,8 @@ public class Intake implements Subsystem {
     private void applyMode(boolean staged) {
         switch (mode) {
             case PULL:
-                // Roller one keeps feeding even when the stage is full so balls stay
-                // loaded against roller two; only roller two pauses to avoid a jam.
                 rollerOne.pull();
-                if (staged) {
+                if (staged && !force) {
                     rollerTwo.idle();
                 } else {
                     rollerTwo.pull();
