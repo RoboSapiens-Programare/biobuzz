@@ -2,13 +2,13 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import static org.firstinspires.ftc.teamcode.robot.Robot.follower;
 
+import android.os.Environment;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 // import dev.frozenmilk.dairy.pasteurized.Pasteurized;
@@ -37,22 +37,14 @@ public class TeleOP extends RobotOpMode {
         telemetryHz = 10;
     }
 
-    private enum States {
-        INTAKE,
-        OUTTAKE
-    };
-
-    // Initialize state to avoid NullPointerException
-    private States state = States.INTAKE;
-
     private final ElapsedTime debounceTimer = new ElapsedTime();
 
     private CachingDcMotorEx front_left, front_right, rear_left, rear_right, roller1, roller2, flywheel;
-    private VoltageSensor myExpansionHubVoltageSensor;
     private FileTelemetry tuningLog;
     private String tuningError = "";
 
     private boolean lastFire, lastPull, lastPush;
+    private int lastBallCount = 0;
     private String driveCurrentFLFR = "",
             driveCurrentRLRR = "",
             roller1Current = "",
@@ -70,32 +62,6 @@ public class TeleOP extends RobotOpMode {
         return !now && last;
     }
 
-    private void changeState(States newState) {
-        state = newState;
-
-        Tracker.setTrackingFrequency(state == States.OUTTAKE ? TRACKING_HZ_OUTTAKE : TRACKING_HZ_INTAKE);
-
-        if (state == States.INTAKE) {
-            RobotCommands.safeStop(robot.outtake, robot.intake).schedule();
-        } else {
-            RobotCommands.spoolShooter(robot.outtake).schedule();
-        }
-
-        // Require the triggers to be released and pressed again after a state change.
-        boolean rightHeld = gamepad1.right_trigger > 0.1;
-        boolean leftHeld = gamepad1.left_trigger > 0.1;
-        lastFire = rightHeld;
-        lastPull = rightHeld && !leftHeld;
-        lastPush = leftHeld && !rightHeld;
-
-        debounceTimer.reset();
-    }
-
-    private void toggleState() {
-        if (state == States.INTAKE) changeState(States.OUTTAKE);
-        else changeState(States.INTAKE);
-    }
-
     @Override
     protected void onInit() {
         front_left = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "front_left"));
@@ -106,26 +72,22 @@ public class TeleOP extends RobotOpMode {
         roller2 = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "roller_motor_2"));
         flywheel = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel"));
 
-        myExpansionHubVoltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
-
-        robot.setLLLocatorEnabled(false);
-
         // Set initial state actions safely on init
         follower.setPose(new Pose(7.2, 8, Math.PI / 2));
-        changeState(States.INTAKE);
 
         if (Robot.TUNING) {
             robot.outtake.setVelocity(tuningVelocity);
             ensureTuningLog();
         }
 
+        robot.outtake.stopIdling();
         robot.ledDriver.playSweep();
     }
 
     @Override
     protected void onStart() {
         Tracker.setEnabled(true);
-        Tracker.setTrackingFrequency(state == States.OUTTAKE ? TRACKING_HZ_OUTTAKE : TRACKING_HZ_INTAKE);
+        Tracker.setTrackingFrequency(TRACKING_HZ_INTAKE);
         debounceTimer.reset();
     }
 
@@ -156,59 +118,56 @@ public class TeleOP extends RobotOpMode {
                 tuningVelocity = Math.max(0, tuningVelocity - 10);
                 robot.outtake.setVelocity(tuningVelocity);
             }
+            if (gamepad1.dpadRightWasPressed()) {
+                tuningVelocity = Math.max(0, tuningVelocity + 5);
+                robot.outtake.setVelocity(tuningVelocity);
+            }
+            if (gamepad1.dpadLeftWasPressed()) {
+                tuningVelocity = Math.max(0, tuningVelocity - 5);
+                robot.outtake.setVelocity(tuningVelocity);
+            }
             if (gamepad1.squareWasPressed()) {
                 saveTuningSnapshot();
             }
         }
 
-        if (gamepad1.crossWasPressed()) {
-            toggleState();
-        }
-
         boolean rightHeld = gamepad1.right_trigger > 0.1;
         boolean leftHeld = gamepad1.left_trigger > 0.1;
+        boolean rightBumper = gamepad1.right_bumper;
+        int ballCount = robot.intake.getBallCount();
 
-        switch (state) {
-            case INTAKE: {
-                boolean pullHeld = rightHeld && !leftHeld;
-                boolean pushHeld = leftHeld && !rightHeld;
+        boolean pullHeld = rightHeld && !leftHeld;
+        boolean pushHeld = leftHeld && !rightHeld;
 
-                if (onRise(pullHeld, lastPull)) {
-                    RobotCommands.pullBalls(robot.intake).schedule();
-                }
-                if (onRise(pushHeld, lastPush)) {
-                    RobotCommands.pushBalls(robot.intake).schedule();
-                }
-                if ((onDrop(pullHeld, lastPull) || onDrop(pushHeld, lastPush)) && !pullHeld && !pushHeld) {
-                    RobotCommands.idleIntake(robot.intake).schedule();
-                }
+        if (onRise(pullHeld, lastPull)) {
+            RobotCommands.pullBalls(robot.intake).schedule();
 
-                lastPull = pullHeld;
-                lastPush = pushHeld;
-                break;
-            }
+        } else if (onRise(pushHeld, lastPush)) {
+            RobotCommands.pushBalls(robot.intake).schedule();
 
-            case OUTTAKE: {
-                if (onRise(rightHeld, lastFire)) {
-                    RobotCommands.fireWhileHeld(
-                                    robot.outtake,
-                                    robot.intake,
-                                    robot.ledDriver,
-                                    () -> state == States.OUTTAKE && gamepad1.right_trigger > 0.1)
-                            .schedule();
-                } else if (onDrop(rightHeld, lastFire) && robot.outtake.isFiring()) {
-                    changeState(States.INTAKE);
-                }
+        } else if ((onDrop(pullHeld, lastPull) || onDrop(pushHeld, lastPush)) && !pullHeld && !pushHeld) {
+            RobotCommands.idleIntake(robot.intake).schedule();
 
-                lastFire = rightHeld;
-                break;
-            }
+        } else if (onRise(rightBumper, lastFire)) {
+            RobotCommands.fireWhileHeld(robot.outtake, robot.intake, robot.ledDriver, () -> gamepad1.right_bumper)
+                    .schedule();
         }
+
+        if (onRise(ballCount >= 2, lastBallCount >= 2)) {
+            Tracker.setTrackingFrequency(TRACKING_HZ_OUTTAKE);
+
+        } else if (onDrop(ballCount >= 2, lastBallCount >= 2)) {
+            Tracker.setTrackingFrequency(TRACKING_HZ_INTAKE);
+        }
+
+        lastFire = rightBumper;
+        lastPull = pullHeld;
+        lastPush = pushHeld;
+        lastBallCount = ballCount;
 
         // TELEMETRY
         if (telemetryDue()) {
             pTelemetry.addLine("== State ==");
-            pTelemetry.addData("Mode", state);
             pTelemetry.addData(
                     "Pose",
                     String.format(
@@ -222,14 +181,17 @@ public class TeleOP extends RobotOpMode {
             pTelemetry.addData("Ready", robot.outtake.shootReady());
             pTelemetry.addData("Pivot pos", String.format("%.3f", robot.outtake.pos));
 
-            driveCurrentFLFR = String.format(
-                    "%.2f / %.2f", front_left.getCurrent(CurrentUnit.AMPS), front_right.getCurrent(CurrentUnit.AMPS));
-            driveCurrentRLRR = String.format(
-                    "%.2f / %.2f", rear_left.getCurrent(CurrentUnit.AMPS), rear_right.getCurrent(CurrentUnit.AMPS));
-            roller1Current = String.format("%.2f", roller1.getCurrent(CurrentUnit.AMPS));
-            roller2Current = String.format("%.2f", roller2.getCurrent(CurrentUnit.AMPS));
-            flywheelCurrent = String.format("%.2f", flywheel.getCurrent(CurrentUnit.AMPS));
-            intakeMax = String.format("%.2f", robot.intake.getMaxCurrent());
+            if (diagnosticsDue()) {
+                driveCurrentFLFR = String.format(
+                        "%.2f / %.2f",
+                        front_left.getCurrent(CurrentUnit.AMPS), front_right.getCurrent(CurrentUnit.AMPS));
+                driveCurrentRLRR = String.format(
+                        "%.2f / %.2f", rear_left.getCurrent(CurrentUnit.AMPS), rear_right.getCurrent(CurrentUnit.AMPS));
+                roller1Current = String.format("%.2f", roller1.getCurrent(CurrentUnit.AMPS));
+                roller2Current = String.format("%.2f", roller2.getCurrent(CurrentUnit.AMPS));
+                flywheelCurrent = String.format("%.2f", flywheel.getCurrent(CurrentUnit.AMPS));
+                intakeMax = String.format("%.2f", robot.intake.getMaxCurrent());
+            }
 
             pTelemetry.addLine("== Drive currents ==");
             pTelemetry.addData("FL / FR (A)", driveCurrentFLFR);
@@ -307,6 +269,10 @@ public class TeleOP extends RobotOpMode {
 
     private File tuningFileForToday() {
         String date = new SimpleDateFormat("dd_MM_yyyy", Locale.US).format(new Date());
-        return new File(hardwareMap.appContext.getFilesDir(), date + "_tuning.json");
+        File dir = new File(Environment.getExternalStorageDirectory(), "FIRST");
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        return new File(dir, date + "_tuning.json");
     }
 }

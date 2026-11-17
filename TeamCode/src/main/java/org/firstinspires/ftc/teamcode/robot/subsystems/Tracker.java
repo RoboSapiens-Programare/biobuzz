@@ -23,6 +23,12 @@ public class Tracker implements Subsystem {
     private static final double SWITCH_TO_LEFT_Y = 73;
     private static final double SWITCH_TO_RIGHT_Y = 71;
     private static final double MAX_RANGE = Math.toRadians((double) (360 * 3) / 4 - 10);
+    private static final double c0 = 8098.66226821;
+    private static final double c1 = -606.285876874;
+    private static final double c2 = 21.6928633552;
+    private static final double c3 = -0.378920656217;
+    private static final double c4 = 0.00323586834727;
+    private static final double c5 = -1.07818178589e-05;
 
     private static boolean sotmEnabled = true;
     private static double sotmOffset = 0;
@@ -95,13 +101,9 @@ public class Tracker implements Subsystem {
     }
 
     private double computeVelocity(double dist) {
-        // tune regression: v = c0 + c1*d + c2*d^2 + c3*d^3
-        final double c0 = 0;
-        final double c1 = 0;
-        final double c2 = 0;
-        final double c3 = 0;
-        //        return c0 + dist * (c1 + dist * (c2 + dist * c3));
-        return 1000;
+        // tune regression: v = c0 + c1*d + c2*d^2 + c3*d^3 + c4*d^4 + c5*d^5
+        return c0 + dist * (c1 + dist * (c2 + dist * (c3 + dist * (c4 + dist * c5))));
+//        return 1000;
     }
 
     private static double wrapAngle(double angle) {
@@ -129,12 +131,12 @@ public class Tracker implements Subsystem {
             return;
         }
 
-        Pose robotPose = Robot.follower.pose();
-        setTrackPose(selectHivePose(robotPose));
-
         if (hasComputed && periodSec > 0 && timer.seconds() < periodSec) {
             return;
         }
+
+        Pose robotPose = Robot.follower.pose();
+        setTrackPose(selectHivePose(robotPose));
 
         double dx = trackPose.x() - robotPose.x();
         double dy = trackPose.y() - robotPose.y();

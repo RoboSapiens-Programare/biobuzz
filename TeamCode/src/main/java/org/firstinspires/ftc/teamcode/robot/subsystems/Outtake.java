@@ -36,10 +36,10 @@ public class Outtake implements Subsystem {
     public static double GATE_OPEN = 0.76;
     public static double GATE_CLOSED = 0.63;
 
-    public static double kP = 0.0149;
-    public static double kI = 0.2134;
-    public static double kD = 0.0003;
-    public static double kS = 0.0106;
+    public static double kP = 0.0164;
+    public static double kI = 0.4326;
+    public static double kD = 0.0002;
+    public static double kS = 0.0085;
     public static double kV = 0.0004;
 
     public double pos = 0;
@@ -49,7 +49,7 @@ public class Outtake implements Subsystem {
                 .setEncoder(hwMap.get(DcMotorEx.class, "flywheel"))
                 .setPIDConstants(kP, kI, kD)
                 .setFFConstants(kS, kV, 0)
-                .setTolerance(40)
+                .setTolerance(20)
                 .setIdlingPower(0.2);
 
         gate = new CachingServo(hwMap.get(Servo.class, "gate"));
@@ -66,7 +66,9 @@ public class Outtake implements Subsystem {
     }
 
     @Override
-    public void init() {}
+    public void init() {
+        //        aimAt(0);
+    }
 
     @Override
     public void update() {
@@ -100,9 +102,7 @@ public class Outtake implements Subsystem {
 
         flywheel.update();
 
-        if (Robot.TUNING && flywheel.mode == Flywheel.FlywheelMode.PRIMED) {
-            setGate(GATE_OPEN);
-        } else if (firing && shootReady() && flywheel.mode == Flywheel.FlywheelMode.PRIMED) {
+        if (firing && flywheel.mode == Flywheel.FlywheelMode.PRIMED) {
             setGate(GATE_OPEN);
         } else {
             setGate(GATE_CLOSED);

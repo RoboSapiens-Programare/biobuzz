@@ -20,6 +20,7 @@ public class OuttakeUpdateOpMode extends RobotOpMode {
 
         flywheel = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel"));
         robot.outtake.stopIdling();
+        robot.outtake.setTracker(null);
         Tracker.setEnabled(true);
     }
 
