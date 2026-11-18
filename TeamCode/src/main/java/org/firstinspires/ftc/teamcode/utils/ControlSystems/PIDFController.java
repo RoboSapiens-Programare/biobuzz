@@ -18,6 +18,7 @@ public class PIDFController {
     private double setpoint = 0;
     private double maxIntegral = 10.0; // Cap for the "I" term
     private double tolerance = 1;
+    private double integralTolerance = 1;
     private static final double MAX_D_OUTPUT = 0.1; // Clamp for derivative term to kill noise kick
 
     public double maxOutput;
@@ -63,7 +64,7 @@ public class PIDFController {
 
         // Anti-windup: only accumulate integral while the raw output isn't saturated
         if (output > minOutput && output < maxOutput) {
-            if (Math.abs(error) <= tolerance) {
+            if (Math.abs(error) <= integralTolerance) {
                 integral = 0;
             } else {
                 integral += error * timeChange;
@@ -91,6 +92,10 @@ public class PIDFController {
 
     public void setTolerance(double tolerance) {
         this.tolerance = tolerance;
+    }
+
+    public void setIntegralTolerance(double integralTolerance) {
+        this.integralTolerance = integralTolerance;
     }
 
     public boolean targetReached() {

@@ -36,11 +36,11 @@ public class Outtake implements Subsystem {
     public static double GATE_OPEN = 0.76;
     public static double GATE_CLOSED = 0.63;
 
-    public static double kP = 0.0164;
-    public static double kI = 0.4326;
-    public static double kD = 0.0002;
-    public static double kS = 0.0085;
-    public static double kV = 0.0004;
+    public static double kP = 0.0229;
+    public static double kI = 0.5015;
+    public static double kD = 0.0003;
+    public static double kS = 0.1720;
+    public static double kV = 0.0005;
 
     public double pos = 0;
 
@@ -49,7 +49,8 @@ public class Outtake implements Subsystem {
                 .setEncoder(hwMap.get(DcMotorEx.class, "flywheel"))
                 .setPIDConstants(kP, kI, kD)
                 .setFFConstants(kS, kV, 0)
-                .setTolerance(20)
+                .setTolerance(10)
+                .setIntegralTolerance(15)
                 .setIdlingPower(0.2);
 
         gate = new CachingServo(hwMap.get(Servo.class, "gate"));

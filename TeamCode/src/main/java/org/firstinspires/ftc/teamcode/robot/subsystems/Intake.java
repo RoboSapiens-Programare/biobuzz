@@ -79,14 +79,14 @@ public class Intake implements Subsystem {
     }
 
     public void lowerFlower() {
-        flowerLeft.setPosition(0.3);
-        flowerRight.setPosition(0.3);
+        flowerLeft.setPosition(0.45);
+        flowerRight.setPosition(0.45);
         flowerPosition = FlowerPosition.LOWERED;
     }
 
     public void raiseFlower() {
-        flowerRight.setPosition(0.9);
-        flowerLeft.setPosition(0.9);
+        flowerRight.setPosition(0.78);
+        flowerLeft.setPosition(0.78);
         flowerPosition = FlowerPosition.RAISED;
     }
 

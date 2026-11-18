@@ -25,7 +25,6 @@ public class Flywheel implements Mechanism {
     public FlywheelMode mode = FlywheelMode.IDLING;
 
     public Flywheel setEncoder(DcMotorEx encoder) {
-
         this.encoder = new CachingDcMotorEx(encoder);
         return this;
     }
@@ -35,7 +34,7 @@ public class Flywheel implements Mechanism {
 
         motorC.setDirection(reverse ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
         motorC.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorC.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorC.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motorC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         motors.add(motorC);
@@ -80,6 +79,11 @@ public class Flywheel implements Mechanism {
 
     public Flywheel setTolerance(double tolerance) {
         ffController.setTolerance(tolerance);
+        return this;
+    }
+
+    public Flywheel setIntegralTolerance(double integralTolerance) {
+        ffController.setIntegralTolerance(integralTolerance);
         return this;
     }
 

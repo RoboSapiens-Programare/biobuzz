@@ -24,9 +24,10 @@ public class WattsUpAuto extends RobotOpMode {
     private final PoseFactory poseFactory = PoseFactory.degrees();
 
     private final Pose start = poseFactory.of(54.5, 8, -90);
-    private final Pose goGrabGarden = poseFactory.of(9.292, 21.702, -90);
-    private final Pose grabGarden = poseFactory.of(9.217, 9.000, -90);
-    private final Pose shootOneStart = poseFactory.of(9.217, 9, -90);
+    private final Pose goGrabGarden = poseFactory.of(20.292, 10, 243);
+    private final Pose grabGardenOne = poseFactory.of(10.871, 8.769, 247.500);
+    private final Pose grabGardenTwo = poseFactory.of(7.167, 8, 269.687);
+    private final Pose shootOneStart = poseFactory.of(7.167, 8, 269.687);
     private final Pose shootOne = poseFactory.of(44.147, 118.913, 90);
     private final Pose shootOneControl1 = poseFactory.of(21.7309, 22.1526, 0);
     private final Pose shootOneControl2 = poseFactory.of(20.3256, 99.6044, 0);
@@ -84,8 +85,7 @@ public class WattsUpAuto extends RobotOpMode {
                 fireShot(),
                 step("park"),
                 follow(Robot.follower, park()),
-                step("done"),
-                RobotCommands.raiseFlower(robot.intake));
+                step("done"));
     }
 
     @Override
@@ -145,7 +145,10 @@ public class WattsUpAuto extends RobotOpMode {
     }
 
     public Path grabGarden() {
-        return Paths.line(goGrabGarden, grabGarden).constant(grabGarden);
+        return Paths.path(
+                Paths.line(goGrabGarden, grabGardenOne).constant(grabGardenOne),
+                Paths.line(grabGardenOne, grabGardenTwo).linear(grabGardenTwo, grabGardenOne)
+                );
     }
 
     public Path shootOne() {

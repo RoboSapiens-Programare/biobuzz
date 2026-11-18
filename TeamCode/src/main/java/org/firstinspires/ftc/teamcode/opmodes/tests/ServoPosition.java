@@ -8,18 +8,19 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Autonomous
 @Configurable
 public class ServoPosition extends OpMode {
-    private Servo servo1, servo2;
+    private Servo flowerLeft, flowerRight;
     public static double pos = 0.5;
 
     @Override
     public void init() {
-        servo1 = hardwareMap.get(Servo.class, "pivot_left");
-        servo2 = hardwareMap.get(Servo.class, "pivot_right");
+        flowerLeft = hardwareMap.get(Servo.class, "left_flower_servo");
+        flowerRight = hardwareMap.get(Servo.class, "right_flower_servo");
+        flowerRight.setDirection(Servo.Direction.REVERSE);
     }
 
     @Override
     public void loop() {
-        servo1.setPosition(pos);
-        servo2.setPosition(pos);
+        flowerLeft.setPosition(pos);
+        flowerRight.setPosition(pos);
     }
 }
