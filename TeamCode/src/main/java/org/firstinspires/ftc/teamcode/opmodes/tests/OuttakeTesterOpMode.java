@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes.tests;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.commands.RobotCommands;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 
@@ -61,23 +62,27 @@ public class OuttakeTesterOpMode extends RobotOpMode {
                     break;
             }
         }
+    }
 
+    @Override
+    protected void onTelemetry(Telemetry t) {
+        double total = runTimer.seconds();
         double current = robot.outtake.getCurrentSpeed();
         double target = robot.outtake.getTarget();
         boolean atSpeed = Math.abs(target - current) <= AT_SPEED_TOLERANCE;
 
-        telemetry.addData("Step", currentStep);
-        telemetry.addData("Step time", String.format("%.1fs / %.1fs", total - stepStart, stepDuration(currentStep)));
-        telemetry.addData("Run time", String.format("%.1fs", total));
-        telemetry.addLine();
-        telemetry.addData("Firing", currentStep == Step.FIRE);
-        telemetry.addData("Commanded target", target);
-        telemetry.addData("Current speed", String.format("%.1f", current));
-        telemetry.addData("Error", String.format("%.1f", target - current));
-        telemetry.addData("At speed", atSpeed);
-        telemetry.addLine();
-        telemetry.addLine("Auto cycle: IDLE(" + IDLE_SECONDS + "s) -> SPOOL(" + SPOOL_SECONDS + "s) -> FIRE("
-                + FIRE_SECONDS + "s) -> STOP(" + STOP_FIRING_SECONDS + "s) -> repeat");
+        t.addData("Step", currentStep);
+        t.addData("Step time", String.format("%.1fs / %.1fs", total - stepStart, stepDuration(currentStep)));
+        t.addData("Run time", String.format("%.1fs", total));
+        t.addLine();
+        t.addData("Firing", currentStep == Step.FIRE);
+        t.addData("Commanded target", target);
+        t.addData("Current speed", String.format("%.1f", current));
+        t.addData("Error", String.format("%.1f", target - current));
+        t.addData("At speed", atSpeed);
+        t.addLine();
+        t.addLine("Auto cycle: IDLE(" + IDLE_SECONDS + "s) -> SPOOL(" + SPOOL_SECONDS + "s) -> FIRE(" + FIRE_SECONDS
+                + "s) -> STOP(" + STOP_FIRING_SECONDS + "s) -> repeat");
     }
 
     @Override

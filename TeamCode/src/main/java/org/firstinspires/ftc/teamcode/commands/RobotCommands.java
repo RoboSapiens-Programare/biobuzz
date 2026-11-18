@@ -142,6 +142,10 @@ public final class RobotCommands {
         return Commands.instant(intake::raiseFlower);
     }
 
+    public static Command toggleFlower(Intake intake) {
+        return Commands.instant(intake::toggleFlower);
+    }
+
     /**
      * Waits until the intake stages two balls, or until {@code ms} elapses, whichever comes first.
      * Does not run the intake; pair it with {@link #pullBalls(Intake)} and {@link #idleIntake(Intake)}.

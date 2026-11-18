@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Tracker;
@@ -65,12 +66,15 @@ public class VelocityTuningOpMode extends RobotOpMode {
             logPoint();
         }
         prevTouchpad = gamepad1.touchpad;
+    }
 
-        telemetry.addData("Target velocity", velocity);
-        telemetry.addData("Current speed", robot.outtake.getCurrentSpeed());
-        telemetry.addData("Distance to track pose", Robot.follower.pose().distance(Tracker.getTrackPose()));
-        telemetry.addData("Points", points.length());
-        telemetry.addData("Log file", logFile.getAbsolutePath());
+    @Override
+    protected void onTelemetry(Telemetry t) {
+        t.addData("Target velocity", velocity);
+        t.addData("Current speed", robot.outtake.getCurrentSpeed());
+        t.addData("Distance to track pose", Robot.follower.pose().distance(Tracker.getTrackPose()));
+        t.addData("Points", points.length());
+        t.addData("Log file", logFile.getAbsolutePath());
     }
 
     @Override

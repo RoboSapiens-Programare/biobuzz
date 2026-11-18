@@ -103,7 +103,7 @@ public class Tracker implements Subsystem {
     private double computeVelocity(double dist) {
         // tune regression: v = c0 + c1*d + c2*d^2 + c3*d^3 + c4*d^4 + c5*d^5
         return c0 + dist * (c1 + dist * (c2 + dist * (c3 + dist * (c4 + dist * c5))));
-//        return 1000;
+        //        return 1000;
     }
 
     private static double wrapAngle(double angle) {

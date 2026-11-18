@@ -17,6 +17,11 @@ public class Intake implements Subsystem {
         IDLE
     }
 
+    private enum FlowerPosition {
+        RAISED,
+        LOWERED
+    }
+
     private final Roller rollerOne = new Roller();
     private final Roller rollerTwo = new Roller();
 
@@ -36,7 +41,8 @@ public class Intake implements Subsystem {
     private boolean force = false;
     private int ballCount = 0;
 
-    private final Servo flower;
+    private final Servo flowerLeft, flowerRight;
+    private FlowerPosition flowerPosition;
 
     public Intake(HardwareMap hwMap) {
         rollerOne.addMotor(hwMap.get(DcMotorEx.class, "roller_motor"), true);
@@ -48,7 +54,9 @@ public class Intake implements Subsystem {
         pollenOneSensor = hwMap.get(DistanceSensor.class, "pollen_one_sensor");
         pollenThreeSensor = hwMap.get(DistanceSensor.class, "pollen_three_sensor");
 
-        flower = hwMap.get(Servo.class, "flower_servo");
+        flowerLeft = hwMap.get(Servo.class, "left_flower_servo");
+        flowerRight = hwMap.get(Servo.class, "right_flower_servo");
+        flowerRight.setDirection(Servo.Direction.REVERSE);
     }
 
     public void pullBalls() {
@@ -71,11 +79,23 @@ public class Intake implements Subsystem {
     }
 
     public void lowerFlower() {
-        flower.setPosition(0.3);
+        flowerLeft.setPosition(0.3);
+        flowerRight.setPosition(0.3);
+        flowerPosition = FlowerPosition.LOWERED;
     }
 
     public void raiseFlower() {
-        flower.setPosition(0.9);
+        flowerRight.setPosition(0.9);
+        flowerLeft.setPosition(0.9);
+        flowerPosition = FlowerPosition.RAISED;
+    }
+
+    public void toggleFlower() {
+        if (flowerPosition == FlowerPosition.RAISED) {
+            lowerFlower();
+        } else {
+            raiseFlower();
+        }
     }
 
     public int getBallCount() {

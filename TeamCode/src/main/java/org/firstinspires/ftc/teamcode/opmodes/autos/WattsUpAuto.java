@@ -12,6 +12,7 @@ import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.commands.RobotCommands;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
@@ -103,41 +104,39 @@ public class WattsUpAuto extends RobotOpMode {
     }
 
     @Override
-    protected void onUpdate() {
-        if (telemetryDue()) {
-            pTelemetry.addData("Auto step", autoStep);
-            pTelemetry.addData("Step seconds", String.format("%.1f", stepTimer.seconds()));
-            pTelemetry.addData("Ball count", robot.intake.getBallCount());
-            pTelemetry.addData("Shooter ready", robot.outtake.shootReady());
-            pTelemetry.addData("Shooter speed", String.format("%.0f", robot.outtake.getCurrentSpeed()));
-            pTelemetry.addData("Shooter target", String.format("%.0f", robot.outtake.getTarget()));
-            pTelemetry.addData(
-                    "Shooter error",
-                    String.format("%.0f", robot.outtake.getTarget() - robot.outtake.getCurrentSpeed()));
+    protected void onUpdate() {}
 
-            Pose robotPose = Robot.follower.pose();
-            Pose trackPose = Tracker.getTrackPose();
-            pTelemetry.addData("Track pose", String.format("%.1f, %.1f", trackPose.x(), trackPose.y()));
-            pTelemetry.addData("Track distance", String.format("%.1f", robotPose.distance(trackPose)));
-            pTelemetry.addData("Tracker velocity", String.format("%.0f", robot.tracker.getVelocity()));
+    @Override
+    protected void onTelemetry(Telemetry t) {
+        t.addData("Auto step", autoStep);
+        t.addData("Step seconds", String.format("%.1f", stepTimer.seconds()));
+        t.addData("Ball count", robot.intake.getBallCount());
+        t.addData("Shooter ready", robot.outtake.shootReady());
+        t.addData("Shooter speed", String.format("%.0f", robot.outtake.getCurrentSpeed()));
+        t.addData("Shooter target", String.format("%.0f", robot.outtake.getTarget()));
+        t.addData("Shooter error", String.format("%.0f", robot.outtake.getTarget() - robot.outtake.getCurrentSpeed()));
 
-            if (Robot.follower.currentPath() != null) {
-                pTelemetry.addData("Current path distance remaining", Robot.follower.distanceToEndpoint());
-                pTelemetry.addData("Path number", Robot.follower.pathIndex());
-            }
+        Pose robotPose = Robot.follower.pose();
+        Pose trackPose = Tracker.getTrackPose();
+        t.addData("Track pose", String.format("%.1f, %.1f", trackPose.x(), trackPose.y()));
+        t.addData("Track distance", String.format("%.1f", robotPose.distance(trackPose)));
+        t.addData("Tracker velocity", String.format("%.0f", robot.tracker.getVelocity()));
 
-            if (autoStep.equals("park") || autoStep.equals("park timeout")) {
-                pTelemetry.addData("Follower mode", Robot.follower.mode());
-                pTelemetry.addData("Following", Robot.follower.following());
-                pTelemetry.addData("Busy", Robot.follower.isBusy());
-                pTelemetry.addData("At para end", Robot.follower.atParametricEnd());
-                pTelemetry.addData("Completion", String.format("%.3f", Robot.follower.completion()));
-                pTelemetry.addData("Remaining", String.format("%.2f", Robot.follower.remainingDistance()));
+        if (Robot.follower.currentPath() != null) {
+            t.addData("Current path distance remaining", Robot.follower.distanceToEndpoint());
+            t.addData("Path number", Robot.follower.pathIndex());
+        }
 
-                Pose pose = Robot.follower.pose();
-                pTelemetry.addData(
-                        "Pose", String.format("%.2f, %.2f, %.1f", pose.x(), pose.y(), Math.toDegrees(pose.heading())));
-            }
+        if (autoStep.equals("park") || autoStep.equals("park timeout")) {
+            t.addData("Follower mode", Robot.follower.mode());
+            t.addData("Following", Robot.follower.following());
+            t.addData("Busy", Robot.follower.isBusy());
+            t.addData("At para end", Robot.follower.atParametricEnd());
+            t.addData("Completion", String.format("%.3f", Robot.follower.completion()));
+            t.addData("Remaining", String.format("%.2f", Robot.follower.remainingDistance()));
+
+            Pose pose = Robot.follower.pose();
+            t.addData("Pose", String.format("%.2f, %.2f, %.1f", pose.x(), pose.y(), Math.toDegrees(pose.heading())));
         }
     }
 

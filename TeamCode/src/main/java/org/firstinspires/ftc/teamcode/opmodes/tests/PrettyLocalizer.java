@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes.tests;
 
 import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 
@@ -13,20 +14,18 @@ public class PrettyLocalizer extends RobotOpMode {
     }
 
     @Override
-    protected void onUpdate() {
+    protected void onUpdate() {}
+
+    @Override
+    protected void onTelemetry(Telemetry t) {
         Pose p = Robot.follower.pose();
 
-        pTelemetry.addData("Pose", p);
-        pTelemetry.addData("X", p.x());
-        pTelemetry.addData("Y", p.y());
-        pTelemetry.addData("H", Math.toDegrees(p.heading()));
-        pTelemetry.addLine("  == PEDRO == ");
-        pTelemetry.addData(
+        t.addData("Pose", p);
+        t.addData("X", p.x());
+        t.addData("Y", p.y());
+        t.addData("H", Math.toDegrees(p.heading()));
+        t.addLine("  == PEDRO == ");
+        t.addData(
                 "Pose", String.format("poseFactory.of(%.3f, %.3f, %.3f);", p.x(), p.y(), Math.toDegrees(p.heading())));
-
-        telemetry.addData("Pose", p);
-        telemetry.addData("X", p.x());
-        telemetry.addData("Y", p.y());
-        telemetry.addData("H", Math.toDegrees(p.heading()));
     }
 }

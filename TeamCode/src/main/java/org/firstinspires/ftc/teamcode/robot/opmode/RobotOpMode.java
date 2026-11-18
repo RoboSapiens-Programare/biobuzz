@@ -58,6 +58,9 @@ public abstract class RobotOpMode extends OpMode {
     /** Called every loop while active. Map gamepads / triggers to commands here. */
     protected abstract void onUpdate();
 
+    /** Called only when telemetry is due. Override to add OpMode telemetry to {@code t}. */
+    protected void onTelemetry(Telemetry t) {}
+
     /** Called once after the OpMode stops. Override for cleanup. */
     protected void onStop() {}
 
@@ -120,6 +123,9 @@ public abstract class RobotOpMode extends OpMode {
 
         if (telemetryDue) {
             frequencyMonitor.beginStage();
+            onTelemetry(pTelemetry);
+            onTelemetry(telemetry);
+
             addLoopTelemetry(telemetry);
             if (pTelemetry != telemetry) {
                 addLoopTelemetry(pTelemetry);

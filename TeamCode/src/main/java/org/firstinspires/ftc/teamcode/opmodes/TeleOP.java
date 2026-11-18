@@ -16,6 +16,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.commands.RobotCommands;
 import org.firstinspires.ftc.teamcode.robot.FileTelemetry.FileTelemetry;
@@ -43,7 +44,8 @@ public class TeleOP extends RobotOpMode {
     private FileTelemetry tuningLog;
     private String tuningError = "";
 
-    private boolean lastFire, lastPull, lastPush;
+    private boolean lastFire, lastPull, lastPush, lastFlower;
+    private boolean rightHeld, leftHeld;
     private int lastBallCount = 0;
     private String driveCurrentFLFR = "",
             driveCurrentRLRR = "",
@@ -101,7 +103,6 @@ public class TeleOP extends RobotOpMode {
     @Override
     protected void onUpdate() {
         Pose robotPose = follower.pose();
-
         DrivePowers powers = ManualDrive.fieldCentric(
                 -gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, robotPose.heading());
 
@@ -131,9 +132,10 @@ public class TeleOP extends RobotOpMode {
             }
         }
 
-        boolean rightHeld = gamepad1.right_trigger > 0.1;
-        boolean leftHeld = gamepad1.left_trigger > 0.1;
-        boolean rightBumper = gamepad1.right_bumper;
+        rightHeld = gamepad1.right_trigger > 0.1;
+        leftHeld = gamepad1.left_trigger > 0.1;
+        boolean fire = gamepad1.right_bumper;
+        boolean flower = gamepad1.left_bumper;
         int ballCount = robot.intake.getBallCount();
 
         boolean pullHeld = rightHeld && !leftHeld;
@@ -148,9 +150,11 @@ public class TeleOP extends RobotOpMode {
         } else if ((onDrop(pullHeld, lastPull) || onDrop(pushHeld, lastPush)) && !pullHeld && !pushHeld) {
             RobotCommands.idleIntake(robot.intake).schedule();
 
-        } else if (onRise(rightBumper, lastFire)) {
+        } else if (onRise(fire, lastFire)) {
             RobotCommands.fireWhileHeld(robot.outtake, robot.intake, robot.ledDriver, () -> gamepad1.right_bumper)
                     .schedule();
+        } else if (onRise(flower, lastFlower)) {
+            RobotCommands.toggleFlower(robot.intake).schedule();
         }
 
         if (onRise(ballCount >= 2, lastBallCount >= 2)) {
@@ -160,87 +164,66 @@ public class TeleOP extends RobotOpMode {
             Tracker.setTrackingFrequency(TRACKING_HZ_INTAKE);
         }
 
-        lastFire = rightBumper;
+        lastFire = fire;
         lastPull = pullHeld;
         lastPush = pushHeld;
         lastBallCount = ballCount;
+        lastFlower = flower;
+    }
 
-        // TELEMETRY
-        if (telemetryDue()) {
-            pTelemetry.addLine("== State ==");
-            pTelemetry.addData(
-                    "Pose",
-                    String.format(
-                            "(%.1f, %.1f) @ %.1f deg",
-                            robotPose.x(), robotPose.y(), Math.toDegrees(robotPose.heading())));
+    @Override
+    protected void onTelemetry(Telemetry t) {
+        Pose robotPose = follower.pose();
 
-            pTelemetry.addLine("== Shooter ==");
-            pTelemetry.addData(
-                    "Speed (cur/target)",
-                    String.format("%.0f / %.0f", robot.outtake.getCurrentSpeed(), robot.outtake.getTarget()));
-            pTelemetry.addData("Ready", robot.outtake.shootReady());
-            pTelemetry.addData("Pivot pos", String.format("%.3f", robot.outtake.pos));
+        t.addLine("== State ==");
+        t.addData(
+                "Pose",
+                String.format(
+                        "(%.1f, %.1f) @ %.1f deg", robotPose.x(), robotPose.y(), Math.toDegrees(robotPose.heading())));
 
-            if (diagnosticsDue()) {
-                driveCurrentFLFR = String.format(
-                        "%.2f / %.2f",
-                        front_left.getCurrent(CurrentUnit.AMPS), front_right.getCurrent(CurrentUnit.AMPS));
-                driveCurrentRLRR = String.format(
-                        "%.2f / %.2f", rear_left.getCurrent(CurrentUnit.AMPS), rear_right.getCurrent(CurrentUnit.AMPS));
-                roller1Current = String.format("%.2f", roller1.getCurrent(CurrentUnit.AMPS));
-                roller2Current = String.format("%.2f", roller2.getCurrent(CurrentUnit.AMPS));
-                flywheelCurrent = String.format("%.2f", flywheel.getCurrent(CurrentUnit.AMPS));
-                intakeMax = String.format("%.2f", robot.intake.getMaxCurrent());
-            }
+        t.addLine("== Shooter ==");
+        t.addData(
+                "Speed (cur/target)",
+                String.format("%.0f / %.0f", robot.outtake.getCurrentSpeed(), robot.outtake.getTarget()));
+        t.addData("Ready", robot.outtake.shootReady());
+        t.addData("Pivot pos", String.format("%.3f", robot.outtake.pos));
 
-            pTelemetry.addLine("== Drive currents ==");
-            pTelemetry.addData("FL / FR (A)", driveCurrentFLFR);
-            pTelemetry.addData("RL / RR (A)", driveCurrentRLRR);
-
-            pTelemetry.addLine("== Diagnostics ==");
-            pTelemetry.addData("Roller 1 current (A)", roller1Current);
-            pTelemetry.addData("Roller 2 current (A)", roller2Current);
-            pTelemetry.addData("Flywheel current (A)", flywheelCurrent);
-            pTelemetry.addData("Intake max (A)", intakeMax);
-
-            pTelemetry.addLine("== Gamepad ==");
-            pTelemetry.addData("Right Held", rightHeld);
-            pTelemetry.addData("Left Held", leftHeld);
-
-            if (Robot.TUNING) {
-                pTelemetry.addLine("== Tuning ==");
-                pTelemetry.addData("Target velocity", String.format("%.0f", robot.outtake.getTarget()));
-                pTelemetry.addData(
-                        "Distance to goal", String.format("%.2f", robotPose.distance(Tracker.getTrackPose())));
-                pTelemetry.addData("Snapshots", tuningLog == null ? 0 : tuningLog.getSnapshotCount());
-                pTelemetry.addData(
-                        "File",
-                        tuningLog == null ? "-" : tuningLog.getOutputFile().getAbsolutePath());
-                if (!tuningError.isEmpty()) {
-                    pTelemetry.addData("Save error", tuningError);
-                }
-            }
+        if (diagnosticsDue()) {
+            driveCurrentFLFR = String.format(
+                    "%.2f / %.2f", front_left.getCurrent(CurrentUnit.AMPS), front_right.getCurrent(CurrentUnit.AMPS));
+            driveCurrentRLRR = String.format(
+                    "%.2f / %.2f", rear_left.getCurrent(CurrentUnit.AMPS), rear_right.getCurrent(CurrentUnit.AMPS));
+            roller1Current = String.format("%.2f", roller1.getCurrent(CurrentUnit.AMPS));
+            roller2Current = String.format("%.2f", roller2.getCurrent(CurrentUnit.AMPS));
+            flywheelCurrent = String.format("%.2f", flywheel.getCurrent(CurrentUnit.AMPS));
+            intakeMax = String.format("%.2f", robot.intake.getMaxCurrent());
         }
 
-        // Omega limit block disabled until it is fed into the shooter.
-        // final double BASE_OMEGA_FREE = 6000.0;
-        // final double BASE_ISTALL = 9.2;
-        // final double BASE_INOLOAD = 0.25;
-        //
-        // double vActual = myExpansionHubVoltageSensor.getVoltage();
-        // double vNominal = 12.0;
-        //
-        // double vRatio = vActual / vNominal;
-        // double omegaFreeAdj = BASE_OMEGA_FREE * vRatio;
-        // double iStallAdj = BASE_ISTALL * vRatio;
-        // double iNoLoadAdj = BASE_INOLOAD * vRatio; // (Or use your measured live I_no_load)
-        //
-        // double iMeasured = roller.getCurrent(CurrentUnit.AMPS);
-        //
-        // double omegaLimit = omegaFreeAdj * (1.0 - (2.0 * (iMeasured - iNoLoadAdj)) / iStallAdj);
-        //
-        // omegaLimit = Math.max(0.0, omegaLimit);
-        // pTelemetry.addData("Omega limit", String.format("%.1f", omegaLimit));
+        t.addLine("== Drive currents ==");
+        t.addData("FL / FR (A)", driveCurrentFLFR);
+        t.addData("RL / RR (A)", driveCurrentRLRR);
+
+        t.addLine("== Diagnostics ==");
+        t.addData("Roller 1 current (A)", roller1Current);
+        t.addData("Roller 2 current (A)", roller2Current);
+        t.addData("Flywheel current (A)", flywheelCurrent);
+        t.addData("Intake max (A)", intakeMax);
+
+        t.addLine("== Gamepad ==");
+        t.addData("Right Held", rightHeld);
+        t.addData("Left Held", leftHeld);
+
+        if (Robot.TUNING) {
+            t.addLine("== Tuning ==");
+            t.addData("Target velocity", String.format("%.0f", robot.outtake.getTarget()));
+            t.addData("Distance to goal", String.format("%.2f", robotPose.distance(Tracker.getTrackPose())));
+            t.addData("Snapshots", tuningLog == null ? 0 : tuningLog.getSnapshotCount());
+            t.addData(
+                    "File", tuningLog == null ? "-" : tuningLog.getOutputFile().getAbsolutePath());
+            if (!tuningError.isEmpty()) {
+                t.addData("Save error", tuningError);
+            }
+        }
     }
 
     private void ensureTuningLog() {
