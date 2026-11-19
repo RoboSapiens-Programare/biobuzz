@@ -19,16 +19,25 @@ public final class RobotCommands {
 
     /** Spools the flywheel to shooting speed. */
     public static Command spoolShooter(Outtake outtake) {
-        return Commands.instant(outtake::stopIdling).requiring(outtake);
+        return Commands.instant(() -> {
+                    outtake.setFiring(false);
+                    outtake.stopIdling();
+                })
+                .requiring(outtake);
     }
 
     /** Returns the shooter to its idle velocity and stops firing. */
     public static Command idleShooter(Outtake outtake) {
-        return Commands.instant(outtake::startIdling).requiring(outtake).setPriority(1);
+        return Commands.instant(() -> {
+                    outtake.setFiring(false);
+                    outtake.startIdling();
+                })
+                .requiring(outtake)
+                .setPriority(1);
     }
 
     /**
-     * Fires until interrupted, feeding only when the shooter reports ready.
+     * Fires until interrupted. Waits for the shooter to reach speed, then feeds continuously.
      * Interrupted by {@link #safeStop(Outtake, Intake)}.
      */
     public static Command fireShooter(Outtake outtake, Intake intake, LEDDriver ledDriver) {
@@ -37,12 +46,27 @@ public final class RobotCommands {
 
     /** Fires while {@code held} is true and cleans up as soon as it is released. */
     public static Command fireWhileHeld(Outtake outtake, Intake intake, LEDDriver ledDriver, BooleanSupplier held) {
+        boolean[] firing = {false};
+        boolean[] feeding = {false};
         return Command.build()
                 .setStart(() -> {
-                    outtake.setFiring(true);
+                    firing[0] = false;
+                    feeding[0] = false;
+                    outtake.setFiring(false);
                     ledDriver.setColor(Color.RED);
                 })
-                .setExecute(() -> feed(outtake, intake))
+                .setExecute(() -> {
+                    if (!firing[0] && outtake.shootReady()) {
+                        firing[0] = true;
+                        outtake.setFiring(true);
+                    }
+
+                    if (firing[0]) {
+                        feedIfReady(outtake, intake, feeding);
+                    } else {
+                        intake.idle();
+                    }
+                })
                 .setDone(() -> !held.getAsBoolean())
                 .setEnd(endCondition -> {
                     stopFiringNow(outtake, intake);
@@ -52,26 +76,26 @@ public final class RobotCommands {
     }
 
     /**
-     * Feeds balls while the shooter is ready and idles otherwise. Runs until interrupted.
+     * Waits for the shooter to reach speed, then feeds continuously until interrupted.
      * Does not control the gate or firing state; pair it with the shooter commands.
      */
     public static Command feedWhenReady(Outtake outtake, Intake intake) {
-        return Command.build()
-                .setExecute(() -> feed(outtake, intake))
-                .setDone(() -> false)
-                .setEnd(endCondition -> intake.idle())
-                .requiring(intake);
+        boolean[] feeding = {false};
+        return Commands.infinite(() -> feedIfReady(outtake, intake, feeding))
+                .requiring(intake)
+                .setEnd(endCondition -> intake.idle());
     }
 
-    private static void feed(Outtake outtake, Intake intake) {
-        if (outtake.shootReady()) {
+    private static void feedIfReady(Outtake outtake, Intake intake, boolean[] feeding) {
+        if (feeding[0] || outtake.shootReady()) {
+            feeding[0] = true;
             intake.pullBalls(true);
         } else {
             intake.idle();
         }
     }
 
-    /** Stops firing and idles the shooter and intake. Preempts a running fire command. */
+    /** Stops firing and idles the intake. Preempts a running fire command. */
     public static Command safeStop(Outtake outtake, Intake intake) {
         return Commands.instant(() -> stopFiringNow(outtake, intake))
                 .requiring(outtake, intake)
@@ -80,7 +104,7 @@ public final class RobotCommands {
 
     private static void stopFiringNow(Outtake outtake, Intake intake) {
         outtake.setFiring(false);
-        outtake.startIdling();
+        //        outtake.startIdling();
         intake.idle();
     }
 
@@ -118,11 +142,19 @@ public final class RobotCommands {
         return Commands.instant(intake::raiseFlower);
     }
 
+    public static Command toggleFlower(Intake intake) {
+        return Commands.instant(intake::toggleFlower);
+    }
+
     /**
      * Waits until the intake stages two balls, or until {@code ms} elapses, whichever comes first.
      * Does not run the intake; pair it with {@link #pullBalls(Intake)} and {@link #idleIntake(Intake)}.
      */
     public static Command intakeTimeout(Intake intake, int ms) {
         return Commands.waitUntil(() -> intake.getBallCount() >= 2).raceWith(Commands.waitMs(ms));
+    }
+
+    public static Command shooterTimeout(Intake intake, int ms) {
+        return Commands.waitUntil(() -> intake.getBallCount() == 0).raceWith(Commands.waitMs(ms));
     }
 }

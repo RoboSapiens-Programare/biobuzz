@@ -17,13 +17,18 @@ public class Intake implements Subsystem {
         IDLE
     }
 
+    private enum FlowerPosition {
+        RAISED,
+        LOWERED
+    }
+
     private final Roller rollerOne = new Roller();
     private final Roller rollerTwo = new Roller();
 
     private final DistanceSensor pollenOneSensor;
     private final DistanceSensor pollenThreeSensor;
 
-    private static final long SENSOR_POLL_MS = 200;
+    private static final long SENSOR_POLL_MS = 300;
 
     private final ElapsedTime sensorTimer = new ElapsedTime();
 
@@ -34,8 +39,10 @@ public class Intake implements Subsystem {
     public static double MIN_DISTANCE = 5;
     public static double PULL_POWER = 0.86;
     private boolean force = false;
+    private int ballCount = 0;
 
-    private final Servo flower;
+    private final Servo flowerLeft, flowerRight;
+    private FlowerPosition flowerPosition;
 
     public Intake(HardwareMap hwMap) {
         rollerOne.addMotor(hwMap.get(DcMotorEx.class, "roller_motor"), true);
@@ -47,7 +54,9 @@ public class Intake implements Subsystem {
         pollenOneSensor = hwMap.get(DistanceSensor.class, "pollen_one_sensor");
         pollenThreeSensor = hwMap.get(DistanceSensor.class, "pollen_three_sensor");
 
-        flower = hwMap.get(Servo.class, "flower_servo");
+        flowerLeft = hwMap.get(Servo.class, "left_flower_servo");
+        flowerRight = hwMap.get(Servo.class, "right_flower_servo");
+        flowerRight.setDirection(Servo.Direction.REVERSE);
     }
 
     public void pullBalls() {
@@ -70,19 +79,27 @@ public class Intake implements Subsystem {
     }
 
     public void lowerFlower() {
-        flower.setPosition(0.3);
+        flowerLeft.setPosition(0.39);
+        flowerRight.setPosition(0.39);
+        flowerPosition = FlowerPosition.LOWERED;
     }
 
     public void raiseFlower() {
-        flower.setPosition(0.9);
+        flowerRight.setPosition(0.78);
+        flowerLeft.setPosition(0.78);
+        flowerPosition = FlowerPosition.RAISED;
+    }
+
+    public void toggleFlower() {
+        if (flowerPosition == FlowerPosition.RAISED) {
+            lowerFlower();
+        } else {
+            raiseFlower();
+        }
     }
 
     public int getBallCount() {
-        int count = 0;
-        count += pollenOneDistance < MIN_DISTANCE ? 1 : 0;
-        count += pollenThreeDistance < MIN_DISTANCE ? 1 : 0;
-
-        return count;
+        return ballCount;
     }
 
     @Override
@@ -99,11 +116,19 @@ public class Intake implements Subsystem {
             pollenOneDistance = pollenOneSensor.getDistance(DistanceUnit.CM);
             pollenThreeDistance = pollenThreeSensor.getDistance(DistanceUnit.CM);
 
+            ballCount = 0;
+            ballCount += pollenOneDistance < MIN_DISTANCE ? 1 : 0;
+            ballCount += pollenThreeDistance < MIN_DISTANCE ? 1 : 0;
+
             sensorTimer.reset();
         }
 
         boolean staged = pollenOneDistance < MIN_DISTANCE && pollenThreeDistance < MIN_DISTANCE;
         applyMode(staged);
+
+        //        if (rollerTwo.getMaxCurrent() > 6) {
+        //            rollerTwoDisabled = true;
+        //        }
 
         rollerOne.update();
         rollerTwo.update();

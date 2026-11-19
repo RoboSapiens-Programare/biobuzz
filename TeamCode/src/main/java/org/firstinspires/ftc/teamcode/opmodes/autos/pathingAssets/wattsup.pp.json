@@ -1,6 +1,6 @@
 {
   "version": "2.0.0",
-  "timestamp": "2026-11-16T08:40:20.428Z",
+  "timestamp": "2026-11-16T09:06:36.668Z",
   "startPoint": {
     "x": 54.5,
     "y": 8,
@@ -54,8 +54,25 @@
       },
       "controlPoints": [],
       "heading": {
-        "type": "tangential",
-        "reverse": true
+        "type": "constant",
+        "reverse": true,
+        "degrees": -90,
+        "startDeg": -90,
+        "endDeg": 90,
+        "piecewiseHeading": {
+          "segments": [
+            {
+              "startProgress": 0,
+              "endProgress": 1,
+              "interpolationType": "linear",
+              "reversed": false,
+              "parameters": {
+                "startDeg": 0,
+                "endDeg": 0
+              }
+            }
+          ]
+        }
       },
       "color": "#f28e2b",
       "locked": false,
@@ -74,13 +91,34 @@
       },
       "controlPoints": [
         {
-          "x": 16.2281,
-          "y": 121.2026
+          "x": 21.73088377532959,
+          "y": 22.15260449816385
+        },
+        {
+          "x": 28.325634492079125,
+          "y": 99.60443805061303
         }
       ],
       "heading": {
-        "type": "tangential",
-        "reverse": true
+        "type": "linear",
+        "reverse": true,
+        "degrees": 0,
+        "startDeg": -90,
+        "endDeg": 90,
+        "piecewiseHeading": {
+          "segments": [
+            {
+              "startProgress": 0,
+              "endProgress": 1,
+              "interpolationType": "linear",
+              "reversed": false,
+              "parameters": {
+                "startDeg": 0,
+                "endDeg": 0
+              }
+            }
+          ]
+        }
       },
       "color": "#edc948",
       "locked": false,
@@ -99,8 +137,25 @@
       },
       "controlPoints": [],
       "heading": {
-        "type": "tangential",
-        "reverse": true
+        "type": "constant",
+        "reverse": true,
+        "degrees": 90,
+        "startDeg": 0,
+        "endDeg": 0,
+        "piecewiseHeading": {
+          "segments": [
+            {
+              "startProgress": 0,
+              "endProgress": 1,
+              "interpolationType": "linear",
+              "reversed": false,
+              "parameters": {
+                "startDeg": 0,
+                "endDeg": 0
+              }
+            }
+          ]
+        }
       },
       "color": "#e15759",
       "locked": false,

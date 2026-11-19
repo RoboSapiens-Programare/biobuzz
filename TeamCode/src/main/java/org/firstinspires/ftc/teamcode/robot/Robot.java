@@ -25,8 +25,6 @@ public class Robot {
 
     public static Follower follower;
 
-    private boolean llLocatorEnabled = true;
-
     private static List<LynxModule> allHubs = Collections.emptyList();
 
     public static boolean TUNING = false;
@@ -42,8 +40,6 @@ public class Robot {
 
         intake = new Intake(hwMap);
 
-        llLocator = new LLLocator(hwMap);
-
         tracker = new Tracker();
         outtake.setTracker(tracker);
 
@@ -58,30 +54,17 @@ public class Robot {
         }
     }
 
-    public void setLLLocatorEnabled(boolean enabled) {
-        llLocatorEnabled = enabled;
-    }
-
-    public boolean isLLLocatorEnabled() {
-        return llLocatorEnabled;
-    }
-
     public void update() {
         follower.update();
         tracker.update();
         intake.update();
         outtake.update();
         ledDriver.update();
-
-        if (llLocatorEnabled) {
-            llLocator.update();
-        }
     }
 
     public void init() {
         intake.init();
         outtake.init();
-        llLocator.init();
         tracker.init();
         ledDriver.init();
 
@@ -91,7 +74,6 @@ public class Robot {
     public void stop() {
         intake.stop();
         outtake.stop();
-        llLocator.stop();
         tracker.stop();
         ledDriver.stop();
     }

@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.robot.opmode;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.ivy.Scheduler;
+import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.robot.Robot;
@@ -29,11 +30,20 @@ public abstract class RobotOpMode extends OpMode {
     /** Telemetry update rate in Hz. 0 keeps the original every-loop behavior. */
     protected double telemetryHz = 0;
 
+    /** Diagnostic hardware reads (motor currents, etc.) rate in Hz. */
+    protected double diagnosticsHz = 4;
+
     private boolean telemetryDue = true;
     private long lastTelemetryNanos;
+    private boolean diagnosticsDue = true;
+    private long lastDiagnosticsNanos;
 
     protected boolean telemetryDue() {
         return telemetryDue;
+    }
+
+    protected boolean diagnosticsDue() {
+        return diagnosticsDue;
     }
 
     /** Called once in init(). Override for setup. */
@@ -47,6 +57,9 @@ public abstract class RobotOpMode extends OpMode {
 
     /** Called every loop while active. Map gamepads / triggers to commands here. */
     protected abstract void onUpdate();
+
+    /** Called only when telemetry is due. Override to add OpMode telemetry to {@code t}. */
+    protected void onTelemetry(Telemetry t) {}
 
     /** Called once after the OpMode stops. Override for cleanup. */
     protected void onStop() {}
@@ -91,13 +104,28 @@ public abstract class RobotOpMode extends OpMode {
             lastTelemetryNanos = now;
         }
 
+        diagnosticsDue = diagnosticsHz <= 0 || now - lastDiagnosticsNanos >= (long) (1e9 / diagnosticsHz);
+        if (diagnosticsDue) {
+            lastDiagnosticsNanos = now;
+        }
+
+        frequencyMonitor.beginStage();
         onUpdate();
+        frequencyMonitor.endOnUpdate();
 
+        frequencyMonitor.beginStage();
         Scheduler.execute();
+        frequencyMonitor.endScheduler();
 
+        frequencyMonitor.beginStage();
         robot.update();
+        frequencyMonitor.endRobot();
 
         if (telemetryDue) {
+            frequencyMonitor.beginStage();
+            onTelemetry(pTelemetry);
+            onTelemetry(telemetry);
+
             addLoopTelemetry(telemetry);
             if (pTelemetry != telemetry) {
                 addLoopTelemetry(pTelemetry);
@@ -107,6 +135,7 @@ public abstract class RobotOpMode extends OpMode {
             if (pTelemetry != telemetry) {
                 pTelemetry.update();
             }
+            frequencyMonitor.endTelemetry();
         }
     }
 
@@ -114,6 +143,15 @@ public abstract class RobotOpMode extends OpMode {
         telemetry.addData("Loop Hz (inst)", String.format("%.1f", frequencyMonitor.getInstantHz()));
         telemetry.addData("Loop Hz (avg)", String.format("%.1f", frequencyMonitor.getSmoothedHz()));
         telemetry.addData("Loop ms", String.format("%.2f", frequencyMonitor.getMs()));
+        telemetry.addData("Update ms", String.format("%.2f", frequencyMonitor.getOnUpdateMs()));
+        telemetry.addData("Scheduler ms", String.format("%.2f", frequencyMonitor.getSchedulerMs()));
+        telemetry.addData("Robot ms", String.format("%.2f", frequencyMonitor.getRobotMs()));
+        telemetry.addData("Telemetry ms", String.format("%.2f", frequencyMonitor.getTelemetryMs()));
+        Pose pose = Robot.follower.pose();
+        telemetry.addLine("== Pose ==");
+        telemetry.addData("X", pose.x());
+        telemetry.addData("Y", pose.y());
+        telemetry.addData("Heading", pose.heading());
     }
 
     @Override

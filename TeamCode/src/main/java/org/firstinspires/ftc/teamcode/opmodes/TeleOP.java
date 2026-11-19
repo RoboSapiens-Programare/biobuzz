@@ -2,13 +2,13 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import static org.firstinspires.ftc.teamcode.robot.Robot.follower;
 
+import android.os.Environment;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 // import dev.frozenmilk.dairy.pasteurized.Pasteurized;
@@ -16,6 +16,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.commands.RobotCommands;
 import org.firstinspires.ftc.teamcode.robot.FileTelemetry.FileTelemetry;
@@ -26,6 +27,12 @@ import org.firstinspires.ftc.teamcode.robot.subsystems.Tracker;
 @TeleOp
 @Configurable
 public class TeleOP extends RobotOpMode {
+    private enum ManualMode {
+        FIELD_CENTRIC,
+        ROBOT_CENTRIC
+    }
+
+    private ManualMode manualMode = ManualMode.FIELD_CENTRIC;
 
     public static final boolean COMPETITION = false;
 
@@ -37,22 +44,15 @@ public class TeleOP extends RobotOpMode {
         telemetryHz = 10;
     }
 
-    private enum States {
-        INTAKE,
-        OUTTAKE
-    };
-
-    // Initialize state to avoid NullPointerException
-    private States state = States.INTAKE;
-
     private final ElapsedTime debounceTimer = new ElapsedTime();
 
     private CachingDcMotorEx front_left, front_right, rear_left, rear_right, roller1, roller2, flywheel;
-    private VoltageSensor myExpansionHubVoltageSensor;
     private FileTelemetry tuningLog;
     private String tuningError = "";
 
-    private boolean lastFire, lastPull, lastPush;
+    private boolean lastFire, lastPull, lastPush, lastFlower, lastReset, lastManual;
+    private boolean rightHeld, leftHeld;
+    private int lastBallCount = 0;
     private String driveCurrentFLFR = "",
             driveCurrentRLRR = "",
             roller1Current = "",
@@ -70,32 +70,6 @@ public class TeleOP extends RobotOpMode {
         return !now && last;
     }
 
-    private void changeState(States newState) {
-        state = newState;
-
-        Tracker.setTrackingFrequency(state == States.OUTTAKE ? TRACKING_HZ_OUTTAKE : TRACKING_HZ_INTAKE);
-
-        if (state == States.INTAKE) {
-            RobotCommands.safeStop(robot.outtake, robot.intake).schedule();
-        } else {
-            RobotCommands.spoolShooter(robot.outtake).schedule();
-        }
-
-        // Require the triggers to be released and pressed again after a state change.
-        boolean rightHeld = gamepad1.right_trigger > 0.1;
-        boolean leftHeld = gamepad1.left_trigger > 0.1;
-        lastFire = rightHeld;
-        lastPull = rightHeld && !leftHeld;
-        lastPush = leftHeld && !rightHeld;
-
-        debounceTimer.reset();
-    }
-
-    private void toggleState() {
-        if (state == States.INTAKE) changeState(States.OUTTAKE);
-        else changeState(States.INTAKE);
-    }
-
     @Override
     protected void onInit() {
         front_left = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "front_left"));
@@ -106,26 +80,22 @@ public class TeleOP extends RobotOpMode {
         roller2 = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "roller_motor_2"));
         flywheel = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel"));
 
-        myExpansionHubVoltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
-
-        robot.setLLLocatorEnabled(false);
-
         // Set initial state actions safely on init
         follower.setPose(new Pose(7.2, 8, Math.PI / 2));
-        changeState(States.INTAKE);
 
         if (Robot.TUNING) {
             robot.outtake.setVelocity(tuningVelocity);
             ensureTuningLog();
         }
 
+        robot.outtake.stopIdling();
         robot.ledDriver.playSweep();
     }
 
     @Override
     protected void onStart() {
         Tracker.setEnabled(true);
-        Tracker.setTrackingFrequency(state == States.OUTTAKE ? TRACKING_HZ_OUTTAKE : TRACKING_HZ_INTAKE);
+        Tracker.setTrackingFrequency(TRACKING_HZ_INTAKE);
         debounceTimer.reset();
     }
 
@@ -139,9 +109,16 @@ public class TeleOP extends RobotOpMode {
     @Override
     protected void onUpdate() {
         Pose robotPose = follower.pose();
-
-        DrivePowers powers = ManualDrive.fieldCentric(
-                -gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, robotPose.heading());
+        DrivePowers powers = null;
+        switch (manualMode) {
+            case FIELD_CENTRIC:
+                powers = ManualDrive.fieldCentric(
+                        -gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, robotPose.heading());
+                break;
+            case ROBOT_CENTRIC:
+                powers = new DrivePowers(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
+                break;
+        }
 
         follower.manual(powers);
 
@@ -156,72 +133,91 @@ public class TeleOP extends RobotOpMode {
                 tuningVelocity = Math.max(0, tuningVelocity - 10);
                 robot.outtake.setVelocity(tuningVelocity);
             }
+            if (gamepad1.dpadRightWasPressed()) {
+                tuningVelocity = Math.max(0, tuningVelocity + 5);
+                robot.outtake.setVelocity(tuningVelocity);
+            }
+            if (gamepad1.dpadLeftWasPressed()) {
+                tuningVelocity = Math.max(0, tuningVelocity - 5);
+                robot.outtake.setVelocity(tuningVelocity);
+            }
             if (gamepad1.squareWasPressed()) {
                 saveTuningSnapshot();
             }
         }
 
-        if (gamepad1.crossWasPressed()) {
-            toggleState();
-        }
+        rightHeld = gamepad1.right_trigger > 0.1;
+        leftHeld = gamepad1.left_trigger > 0.1;
+        boolean fire = gamepad1.right_bumper;
+        boolean flower = gamepad1.left_bumper;
+        boolean reset = gamepad1.options;
+        boolean manual = gamepad1.share;
+        int ballCount = robot.intake.getBallCount();
 
-        boolean rightHeld = gamepad1.right_trigger > 0.1;
-        boolean leftHeld = gamepad1.left_trigger > 0.1;
+        boolean pullHeld = rightHeld && !leftHeld;
+        boolean pushHeld = leftHeld && !rightHeld;
 
-        switch (state) {
-            case INTAKE: {
-                boolean pullHeld = rightHeld && !leftHeld;
-                boolean pushHeld = leftHeld && !rightHeld;
+        if (onRise(pullHeld, lastPull)) {
+            RobotCommands.pullBalls(robot.intake).schedule();
 
-                if (onRise(pullHeld, lastPull)) {
-                    RobotCommands.pullBalls(robot.intake).schedule();
-                }
-                if (onRise(pushHeld, lastPush)) {
-                    RobotCommands.pushBalls(robot.intake).schedule();
-                }
-                if ((onDrop(pullHeld, lastPull) || onDrop(pushHeld, lastPush)) && !pullHeld && !pushHeld) {
-                    RobotCommands.idleIntake(robot.intake).schedule();
-                }
+        } else if (onRise(pushHeld, lastPush)) {
+            RobotCommands.pushBalls(robot.intake).schedule();
 
-                lastPull = pullHeld;
-                lastPush = pushHeld;
-                break;
-            }
+        } else if ((onDrop(pullHeld, lastPull) || onDrop(pushHeld, lastPush)) && !pullHeld && !pushHeld) {
+            RobotCommands.idleIntake(robot.intake).schedule();
 
-            case OUTTAKE: {
-                if (onRise(rightHeld, lastFire)) {
-                    RobotCommands.fireWhileHeld(
-                                    robot.outtake,
-                                    robot.intake,
-                                    robot.ledDriver,
-                                    () -> state == States.OUTTAKE && gamepad1.right_trigger > 0.1)
-                            .schedule();
-                } else if (onDrop(rightHeld, lastFire) && robot.outtake.isFiring()) {
-                    changeState(States.INTAKE);
-                }
+        } else if (onRise(fire, lastFire)) {
+            RobotCommands.fireWhileHeld(robot.outtake, robot.intake, robot.ledDriver, () -> gamepad1.right_bumper)
+                    .schedule();
+        } else if (onRise(flower, lastFlower)) {
+            RobotCommands.toggleFlower(robot.intake).schedule();
 
-                lastFire = rightHeld;
-                break;
+        } else if (onRise(reset, lastReset)) {
+            follower.setPose(new Pose(40.4, 61.8, 0));
+            manualMode = ManualMode.FIELD_CENTRIC;
+
+        } else if (onRise(manual, lastManual)) {
+            if (manualMode == ManualMode.FIELD_CENTRIC) {
+                manualMode = ManualMode.ROBOT_CENTRIC;
+            } else {
+                manualMode = ManualMode.FIELD_CENTRIC;
             }
         }
 
-        // TELEMETRY
-        if (telemetryDue()) {
-            pTelemetry.addLine("== State ==");
-            pTelemetry.addData("Mode", state);
-            pTelemetry.addData(
-                    "Pose",
-                    String.format(
-                            "(%.1f, %.1f) @ %.1f deg",
-                            robotPose.x(), robotPose.y(), Math.toDegrees(robotPose.heading())));
+        if (onRise(ballCount >= 2, lastBallCount >= 2)) {
+            Tracker.setTrackingFrequency(TRACKING_HZ_OUTTAKE);
 
-            pTelemetry.addLine("== Shooter ==");
-            pTelemetry.addData(
-                    "Speed (cur/target)",
-                    String.format("%.0f / %.0f", robot.outtake.getCurrentSpeed(), robot.outtake.getTarget()));
-            pTelemetry.addData("Ready", robot.outtake.shootReady());
-            pTelemetry.addData("Pivot pos", String.format("%.3f", robot.outtake.pos));
+        } else if (onDrop(ballCount >= 2, lastBallCount >= 2)) {
+            Tracker.setTrackingFrequency(TRACKING_HZ_INTAKE);
+        }
 
+        lastFire = fire;
+        lastPull = pullHeld;
+        lastPush = pushHeld;
+        lastBallCount = ballCount;
+        lastFlower = flower;
+        lastReset = reset;
+        lastManual = manual;
+    }
+
+    @Override
+    protected void onTelemetry(Telemetry t) {
+        Pose robotPose = follower.pose();
+
+        t.addLine("== State ==");
+        t.addData(
+                "Pose",
+                String.format(
+                        "(%.1f, %.1f) @ %.1f deg", robotPose.x(), robotPose.y(), Math.toDegrees(robotPose.heading())));
+
+        t.addLine("== Shooter ==");
+        t.addData(
+                "Speed (cur/target)",
+                String.format("%.0f / %.0f", robot.outtake.getCurrentSpeed(), robot.outtake.getTarget()));
+        t.addData("Ready", robot.outtake.shootReady());
+        t.addData("Pivot pos", String.format("%.3f", robot.outtake.pos));
+
+        if (diagnosticsDue()) {
             driveCurrentFLFR = String.format(
                     "%.2f / %.2f", front_left.getCurrent(CurrentUnit.AMPS), front_right.getCurrent(CurrentUnit.AMPS));
             driveCurrentRLRR = String.format(
@@ -230,55 +226,34 @@ public class TeleOP extends RobotOpMode {
             roller2Current = String.format("%.2f", roller2.getCurrent(CurrentUnit.AMPS));
             flywheelCurrent = String.format("%.2f", flywheel.getCurrent(CurrentUnit.AMPS));
             intakeMax = String.format("%.2f", robot.intake.getMaxCurrent());
-
-            pTelemetry.addLine("== Drive currents ==");
-            pTelemetry.addData("FL / FR (A)", driveCurrentFLFR);
-            pTelemetry.addData("RL / RR (A)", driveCurrentRLRR);
-
-            pTelemetry.addLine("== Diagnostics ==");
-            pTelemetry.addData("Roller 1 current (A)", roller1Current);
-            pTelemetry.addData("Roller 2 current (A)", roller2Current);
-            pTelemetry.addData("Flywheel current (A)", flywheelCurrent);
-            pTelemetry.addData("Intake max (A)", intakeMax);
-
-            pTelemetry.addLine("== Gamepad ==");
-            pTelemetry.addData("Right Held", rightHeld);
-            pTelemetry.addData("Left Held", leftHeld);
-
-            if (Robot.TUNING) {
-                pTelemetry.addLine("== Tuning ==");
-                pTelemetry.addData("Target velocity", String.format("%.0f", robot.outtake.getTarget()));
-                pTelemetry.addData(
-                        "Distance to goal", String.format("%.2f", robotPose.distance(Tracker.getTrackPose())));
-                pTelemetry.addData("Snapshots", tuningLog == null ? 0 : tuningLog.getSnapshotCount());
-                pTelemetry.addData(
-                        "File",
-                        tuningLog == null ? "-" : tuningLog.getOutputFile().getAbsolutePath());
-                if (!tuningError.isEmpty()) {
-                    pTelemetry.addData("Save error", tuningError);
-                }
-            }
         }
 
-        // Omega limit block disabled until it is fed into the shooter.
-        // final double BASE_OMEGA_FREE = 6000.0;
-        // final double BASE_ISTALL = 9.2;
-        // final double BASE_INOLOAD = 0.25;
-        //
-        // double vActual = myExpansionHubVoltageSensor.getVoltage();
-        // double vNominal = 12.0;
-        //
-        // double vRatio = vActual / vNominal;
-        // double omegaFreeAdj = BASE_OMEGA_FREE * vRatio;
-        // double iStallAdj = BASE_ISTALL * vRatio;
-        // double iNoLoadAdj = BASE_INOLOAD * vRatio; // (Or use your measured live I_no_load)
-        //
-        // double iMeasured = roller.getCurrent(CurrentUnit.AMPS);
-        //
-        // double omegaLimit = omegaFreeAdj * (1.0 - (2.0 * (iMeasured - iNoLoadAdj)) / iStallAdj);
-        //
-        // omegaLimit = Math.max(0.0, omegaLimit);
-        // pTelemetry.addData("Omega limit", String.format("%.1f", omegaLimit));
+        t.addLine("== Drive currents ==");
+        t.addData("FL / FR (A)", driveCurrentFLFR);
+        t.addData("RL / RR (A)", driveCurrentRLRR);
+
+        t.addLine("== Diagnostics ==");
+        t.addData("Roller 1 current (A)", roller1Current);
+        t.addData("Roller 2 current (A)", roller2Current);
+        t.addData("Flywheel current (A)", flywheelCurrent);
+        t.addData("Intake max (A)", intakeMax);
+
+        t.addLine("== Gamepad ==");
+        t.addData("Right Held", rightHeld);
+        t.addData("Left Held", leftHeld);
+        t.addData("Drive mode", manualMode);
+
+        if (Robot.TUNING) {
+            t.addLine("== Tuning ==");
+            t.addData("Target velocity", String.format("%.0f", robot.outtake.getTarget()));
+            t.addData("Distance to goal", String.format("%.2f", robotPose.distance(Tracker.getTrackPose())));
+            t.addData("Snapshots", tuningLog == null ? 0 : tuningLog.getSnapshotCount());
+            t.addData(
+                    "File", tuningLog == null ? "-" : tuningLog.getOutputFile().getAbsolutePath());
+            if (!tuningError.isEmpty()) {
+                t.addData("Save error", tuningError);
+            }
+        }
     }
 
     private void ensureTuningLog() {
@@ -307,6 +282,10 @@ public class TeleOP extends RobotOpMode {
 
     private File tuningFileForToday() {
         String date = new SimpleDateFormat("dd_MM_yyyy", Locale.US).format(new Date());
-        return new File(hardwareMap.appContext.getFilesDir(), date + "_tuning.json");
+        File dir = new File(Environment.getExternalStorageDirectory(), "FIRST");
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        return new File(dir, date + "_tuning.json");
     }
 }

@@ -104,6 +104,12 @@ public class FFController {
         }
     }
 
+    public void setIntegralTolerance(double integralTolerance) {
+        if (pidfController != null) {
+            pidfController.setIntegralTolerance(integralTolerance);
+        }
+    }
+
     public boolean velocityReached() {
         return Math.abs(error) <= tolerance;
     }

@@ -9,7 +9,7 @@ import java.util.List;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 public class Roller implements Mechanism {
-    private static final int CURRENT_SAMPLE_EVERY = 5;
+    private static final int CURRENT_SAMPLE_EVERY = 10;
 
     private final List<CachingDcMotorEx> motors = new ArrayList<>();
     private double power = 0;

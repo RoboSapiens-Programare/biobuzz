@@ -2,11 +2,10 @@ package org.firstinspires.ftc.teamcode.opmodes.tests;
 
 import static org.firstinspires.ftc.teamcode.robot.Robot.follower;
 
-import com.bylazar.telemetry.PanelsTelemetry;
-import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 import org.firstinspires.ftc.teamcode.robot.subsystems.LLLocator;
 
@@ -14,7 +13,6 @@ import org.firstinspires.ftc.teamcode.robot.subsystems.LLLocator;
 public class PollenFollowOpmode extends RobotOpMode {
     LLLocator llLocator;
 
-    TelemetryManager.TelemetryWrapper pTelemetry;
     Path p = null;
 
     private boolean following;
@@ -23,7 +21,6 @@ public class PollenFollowOpmode extends RobotOpMode {
     protected void onInit() {
         llLocator = robot.llLocator;
 
-        pTelemetry = PanelsTelemetry.INSTANCE.getTelemetry().getWrapper();
         follower.setPose(new Pose(0, 0, 0));
     }
 
@@ -41,13 +38,18 @@ public class PollenFollowOpmode extends RobotOpMode {
         if (following && !follower.isBusy()) {
             following = false;
         }
+    }
 
-        pTelemetry.addData("Valid target", llLocator.hasValidTarget());
-        pTelemetry.addData("Robot pose", robotPose);
-        pTelemetry.addData("Pollen pose", pollen);
-        pTelemetry.addData("Distance", robotPose.distance(pollen));
-        pTelemetry.addData("Following", following);
-        pTelemetry.addData("Path", p);
-        pTelemetry.update();
+    @Override
+    protected void onTelemetry(Telemetry t) {
+        Pose robotPose = follower.pose();
+        Pose pollen = llLocator.getPollenAbsolutePose(robotPose);
+
+        t.addData("Valid target", llLocator.hasValidTarget());
+        t.addData("Robot pose", robotPose);
+        t.addData("Pollen pose", pollen);
+        t.addData("Distance", robotPose.distance(pollen));
+        t.addData("Following", following);
+        t.addData("Path", p);
     }
 }
