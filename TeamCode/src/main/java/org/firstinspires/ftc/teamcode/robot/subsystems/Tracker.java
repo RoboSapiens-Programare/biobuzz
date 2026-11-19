@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.robot.subsystems;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.robot.HivePoses;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
+@Configurable
 public class Tracker implements Subsystem {
     private static Pose trackPose = new Pose(0, 0);
 
@@ -23,12 +25,9 @@ public class Tracker implements Subsystem {
     private static final double SWITCH_TO_LEFT_Y = 73;
     private static final double SWITCH_TO_RIGHT_Y = 71;
     private static final double MAX_RANGE = Math.toRadians((double) (360 * 3) / 4 - 10);
-    private static final double c0 = 8098.66226821;
-    private static final double c1 = -606.285876874;
-    private static final double c2 = 21.6928633552;
-    private static final double c3 = -0.378920656217;
-    private static final double c4 = 0.00323586834727;
-    private static final double c5 = -1.07818178589e-05;
+    public static double c0 = 1520.58369314;
+    public static double c1 = -1.15127052318;
+    public static double c2 = 0.0226526266886;
 
     private static boolean sotmEnabled = true;
     private static double sotmOffset = 0;
@@ -101,8 +100,7 @@ public class Tracker implements Subsystem {
     }
 
     private double computeVelocity(double dist) {
-        // tune regression: v = c0 + c1*d + c2*d^2 + c3*d^3 + c4*d^4 + c5*d^5
-        return c0 + dist * (c1 + dist * (c2 + dist * (c3 + dist * (c4 + dist * c5))));
+        return c0 + dist * (c1 + dist * c2);
         //        return 1000;
     }
 

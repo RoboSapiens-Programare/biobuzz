@@ -50,7 +50,7 @@ public class TeleOP extends RobotOpMode {
     private FileTelemetry tuningLog;
     private String tuningError = "";
 
-    private boolean lastFire, lastPull, lastPush, lastFlower, lastReset, lastTouchpad;
+    private boolean lastFire, lastPull, lastPush, lastFlower, lastReset, lastManual;
     private boolean rightHeld, leftHeld;
     private int lastBallCount = 0;
     private String driveCurrentFLFR = "",
@@ -120,7 +120,6 @@ public class TeleOP extends RobotOpMode {
                 break;
         }
 
-
         follower.manual(powers);
 
         if (Robot.TUNING) {
@@ -152,7 +151,7 @@ public class TeleOP extends RobotOpMode {
         boolean fire = gamepad1.right_bumper;
         boolean flower = gamepad1.left_bumper;
         boolean reset = gamepad1.options;
-        boolean touchpad = gamepad1.touchpad;
+        boolean manual = gamepad1.share;
         int ballCount = robot.intake.getBallCount();
 
         boolean pullHeld = rightHeld && !leftHeld;
@@ -174,10 +173,10 @@ public class TeleOP extends RobotOpMode {
             RobotCommands.toggleFlower(robot.intake).schedule();
 
         } else if (onRise(reset, lastReset)) {
-            follower.setPose(new Pose(18.2, 28.7, 0));
+            follower.setPose(new Pose(40.4, 61.8, 0));
             manualMode = ManualMode.FIELD_CENTRIC;
 
-        } else if (onRise(touchpad, lastTouchpad)) {
+        } else if (onRise(manual, lastManual)) {
             if (manualMode == ManualMode.FIELD_CENTRIC) {
                 manualMode = ManualMode.ROBOT_CENTRIC;
             } else {
@@ -198,7 +197,7 @@ public class TeleOP extends RobotOpMode {
         lastBallCount = ballCount;
         lastFlower = flower;
         lastReset = reset;
-        lastTouchpad = touchpad;
+        lastManual = manual;
     }
 
     @Override
@@ -242,6 +241,7 @@ public class TeleOP extends RobotOpMode {
         t.addLine("== Gamepad ==");
         t.addData("Right Held", rightHeld);
         t.addData("Left Held", leftHeld);
+        t.addData("Drive mode", manualMode);
 
         if (Robot.TUNING) {
             t.addLine("== Tuning ==");

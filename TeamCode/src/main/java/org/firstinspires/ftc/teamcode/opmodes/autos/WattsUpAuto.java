@@ -147,8 +147,7 @@ public class WattsUpAuto extends RobotOpMode {
     public Path grabGarden() {
         return Paths.path(
                 Paths.line(goGrabGarden, grabGardenOne).constant(grabGardenOne),
-                Paths.line(grabGardenOne, grabGardenTwo).linear(grabGardenTwo, grabGardenOne)
-                );
+                Paths.line(grabGardenOne, grabGardenTwo).linear(grabGardenTwo, grabGardenOne));
     }
 
     public Path shootOne() {
