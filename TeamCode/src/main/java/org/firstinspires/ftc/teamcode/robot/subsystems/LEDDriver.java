@@ -17,7 +17,7 @@ public class LEDDriver implements Subsystem {
 
     public LEDDriver(HardwareMap hwMap) {
         driver = hwMap.get(GoBildaPrismDriver.class, "prism");
-        driver.setStripLength(12);
+        driver.setStripLength(24);
     }
 
     public void setColor(Color color) {
@@ -41,7 +41,7 @@ public class LEDDriver implements Subsystem {
         PrismAnimations.DroidScan scan = new PrismAnimations.DroidScan(new Color(200, 9, 200), new Color(255, 70, 11));
         scan.setSpeed(0.24f);
         scan.setTrailWidth(2);
-        scan.setStopIndex(12);
+        scan.setStopIndex(24);
 
         driver.clearAllAnimations();
         driver.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, scan);

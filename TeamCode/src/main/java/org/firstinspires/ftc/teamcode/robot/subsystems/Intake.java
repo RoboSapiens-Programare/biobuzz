@@ -79,8 +79,8 @@ public class Intake implements Subsystem {
     }
 
     public void lowerFlower() {
-        flowerLeft.setPosition(0.45);
-        flowerRight.setPosition(0.45);
+        flowerLeft.setPosition(0.39);
+        flowerRight.setPosition(0.39);
         flowerPosition = FlowerPosition.LOWERED;
     }
 
