@@ -24,10 +24,10 @@ public class Tracker implements Subsystem {
     // Hysteresis on the hive switch so the aim does not flap near the midline.
     private static final double SWITCH_TO_LEFT_Y = 73;
     private static final double SWITCH_TO_RIGHT_Y = 71;
-    private static final double MAX_RANGE = Math.toRadians((double) (360 * 3) / 4 - 10);
-    public static double c0 = 1520.58369314;
+    private static final double MAX_RANGE = Math.toRadians((double) (360 * 3) / 4 - 30);
+    public static double c0 = 1505.58369314;
     public static double c1 = -1.15127052318;
-    public static double c2 = 0.0226526266886;
+    public static double c2 = 0.0426526267;
 
     private static boolean sotmEnabled = true;
     private static double sotmOffset = 0;

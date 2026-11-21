@@ -81,7 +81,7 @@ public class TeleOP extends RobotOpMode {
         flywheel = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "flywheel"));
 
         // Set initial state actions safely on init
-        follower.setPose(new Pose(7.2, 8, Math.PI / 2));
+        //        follower.setPose(new Pose(7.2, 8, Math.PI / 2));
 
         if (Robot.TUNING) {
             robot.outtake.setVelocity(tuningVelocity);
@@ -186,9 +186,11 @@ public class TeleOP extends RobotOpMode {
 
         if (onRise(ballCount >= 2, lastBallCount >= 2)) {
             Tracker.setTrackingFrequency(TRACKING_HZ_OUTTAKE);
+            robot.ledDriver.playSweepGreen();
 
         } else if (onDrop(ballCount >= 2, lastBallCount >= 2)) {
             Tracker.setTrackingFrequency(TRACKING_HZ_INTAKE);
+            robot.ledDriver.playSweep();
         }
 
         lastFire = fire;

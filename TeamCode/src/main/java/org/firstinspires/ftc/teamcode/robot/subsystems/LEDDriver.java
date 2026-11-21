@@ -32,7 +32,9 @@ public class LEDDriver implements Subsystem {
 
     private void apply() {
         solid.setPrimaryColor(color);
+        solid.setStopIndex(24);
         solid.setBrightness(brightness);
+        driver.clearAllAnimations();
         driver.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, solid);
         dirty = false;
     }
@@ -41,10 +43,27 @@ public class LEDDriver implements Subsystem {
         PrismAnimations.DroidScan scan = new PrismAnimations.DroidScan(new Color(200, 9, 200), new Color(255, 70, 11));
         scan.setSpeed(0.24f);
         scan.setTrailWidth(2);
-        scan.setStopIndex(24);
+        scan.setStopIndex(12);
 
         driver.clearAllAnimations();
         driver.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, scan);
+
+        scan.setIndexes(13, 24);
+        driver.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_1, scan);
+    }
+
+    public void playSweepGreen() {
+        PrismAnimations.DroidScan scan = new PrismAnimations.DroidScan(new Color(200, 9, 200), new Color(255, 70, 11));
+        scan.setSpeed(0.24f);
+        scan.setTrailWidth(2);
+        scan.setStopIndex(12);
+
+        driver.clearAllAnimations();
+        driver.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, scan);
+
+        PrismAnimations.Blink blink = new PrismAnimations.Blink(Color.GREEN, Color.WHITE);
+        blink.setIndexes(12, 24);
+        driver.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_1, blink);
     }
 
     @Override
