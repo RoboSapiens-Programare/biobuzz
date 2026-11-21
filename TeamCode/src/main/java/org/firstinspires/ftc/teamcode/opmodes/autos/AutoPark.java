@@ -50,13 +50,7 @@ public class AutoPark extends RobotOpMode {
 
     // Autonomous routine
     public Command autoRoutine() {
-        return sequential(
-                step("park"),
-                waitMs(delayMs),
-                fireShot(),
-                follow(Robot.follower, path1()),
-                step("complete")
-        );
+        return sequential(step("park"), waitMs(delayMs), fireShot(), follow(Robot.follower, path1()), step("complete"));
     }
 
     @Override
@@ -114,5 +108,4 @@ public class AutoPark extends RobotOpMode {
     public Path path1() {
         return Paths.curve(start, path1Control1, path1).constant(path1);
     }
-
 }
