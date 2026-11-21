@@ -26,13 +26,14 @@ public class WattsUpAuto extends RobotOpMode {
     private final Pose start = poseFactory.of(54.5, 8, -90);
     private final Pose goGrabGarden = poseFactory.of(20.292, 10, 243);
     private final Pose grabGardenOne = poseFactory.of(10.871, 8.769, 247.500);
-    private final Pose grabGardenTwo = poseFactory.of(7.167, 8, 269.687);
-    private final Pose shootOneStart = poseFactory.of(7.167, 8, 269.687);
+
+    private final Pose grabGardenTwo = poseFactory.of(8, 9, 269.687);
+    private final Pose shootOneStart = poseFactory.of(8, 8, 269.687);
     private final Pose shootOne = poseFactory.of(44.147, 118.913, 90);
     private final Pose shootOneControl1 = poseFactory.of(21.7309, 22.1526, 0);
     private final Pose shootOneControl2 = poseFactory.of(20.3256, 99.6044, 0);
-    private final Pose grabFlower = poseFactory.of(44.808, 124.798, 90);
-    private final Pose parkStart = poseFactory.of(44.808, 124.798, 90);
+    private final Pose grabFlower = poseFactory.of(41.808, 125.798, 90);
+    private final Pose parkStart = poseFactory.of(41.808, 125.798, 90);
     private final Pose park = poseFactory.of(16, 111, 0);
     private final Pose parkTurn = poseFactory.of(
             parkStart.x() + 0.25 * (park.x() - parkStart.x()), parkStart.y() + 0.25 * (park.y() - parkStart.y()), 0);
@@ -71,10 +72,10 @@ public class WattsUpAuto extends RobotOpMode {
                 instant(() -> Tracker.setTrackingFrequency(80)),
                 follow(Robot.follower, shootOne()),
                 step("shoot one"),
+                RobotCommands.lowerFlower(robot.intake),
                 fireShot(),
                 step("go to flower"),
                 instant(() -> Tracker.setTrackingFrequency(30)),
-                RobotCommands.lowerFlower(robot.intake),
                 RobotCommands.pullBalls(robot.intake),
                 follow(Robot.follower, grabFlower()),
                 step("pick flower"),
@@ -85,6 +86,7 @@ public class WattsUpAuto extends RobotOpMode {
                 fireShot(),
                 step("park"),
                 follow(Robot.follower, park()),
+                RobotCommands.raiseFlower(robot.intake),
                 step("done"));
     }
 

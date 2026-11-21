@@ -48,8 +48,8 @@ public class Intake implements Subsystem {
         rollerOne.addMotor(hwMap.get(DcMotorEx.class, "roller_motor"), true);
         rollerTwo.addMotor(hwMap.get(DcMotorEx.class, "roller_motor_2"));
 
-        rollerOne.setPower(PULL_POWER);
-        rollerTwo.setPower(PULL_POWER);
+        rollerOne.setPower(0.86);
+        rollerTwo.setPower(0.41);
 
         pollenOneSensor = hwMap.get(DistanceSensor.class, "pollen_one_sensor");
         pollenThreeSensor = hwMap.get(DistanceSensor.class, "pollen_three_sensor");
@@ -79,8 +79,8 @@ public class Intake implements Subsystem {
     }
 
     public void lowerFlower() {
-        flowerLeft.setPosition(0.39);
-        flowerRight.setPosition(0.39);
+        flowerLeft.setPosition(0.4);
+        flowerRight.setPosition(0.4);
         flowerPosition = FlowerPosition.LOWERED;
     }
 

@@ -16,7 +16,7 @@ public class PIDFController {
     private double previousError = 0;
     private double integral = 0;
     private double setpoint = 0;
-    private double maxIntegral = 10.0; // Cap for the "I" term
+    private double maxIntegral = 1.0; // Cap for the I-term contribution to the output
     private double tolerance = 1;
     private double integralTolerance = 1;
     private static final double MAX_D_OUTPUT = 0.1; // Clamp for derivative term to kill noise kick
@@ -59,25 +59,31 @@ public class PIDFController {
         double derivative = (error - previousError) / timeChange;
         previousError = error;
 
-        // Proportional + clamped Derivative term (before I, to check windup)
-        double output = (kP * error) + Range.clip(kD * derivative, -MAX_D_OUTPUT, MAX_D_OUTPUT);
+        double pTerm = kP * error;
+        double dTerm = Range.clip(kD * derivative, -MAX_D_OUTPUT, MAX_D_OUTPUT);
+        double ffTerm = (Math.abs(error) > tolerance) ? (kF * Math.signum(error)) : 0.0;
 
-        // Anti-windup: only accumulate integral while the raw output isn't saturated
-        if (output > minOutput && output < maxOutput) {
-            if (Math.abs(error) <= integralTolerance) {
-                integral = 0;
-            } else {
+        // Cap the accumulated integral so the I contribution stays within maxIntegral.
+        double integralLimit = (Math.abs(kI) > 1e-9) ? (maxIntegral / Math.abs(kI)) : maxIntegral;
+
+        // Reset the integral once we are inside the integral tolerance band.
+        if (Math.abs(error) <= integralTolerance) {
+            integral = 0;
+        } else {
+            // Anti-windup: only integrate when doing so does not push the
+            // (unsaturated) output further into saturation. Unwinding is always
+            // allowed, so a large setpoint step can recover instead of latching.
+            double tentative = pTerm + dTerm + (kI * integral) + ffTerm;
+            boolean windupHigh = tentative >= maxOutput && error > 0;
+            boolean windupLow = tentative <= minOutput && error < 0;
+            if (!windupHigh && !windupLow) {
                 integral += error * timeChange;
             }
         }
-        integral = Range.clip(integral, -maxIntegral, maxIntegral);
+        integral = Range.clip(integral, -integralLimit, integralLimit);
 
         // Calculate PID Output
-        output += (kI * integral);
-
-        if (Math.abs(error) > tolerance) {
-            output += kF * Math.signum(error);
-        }
+        double output = pTerm + dTerm + (kI * integral) + ffTerm;
 
         timer.reset();
 

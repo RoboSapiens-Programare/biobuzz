@@ -1,18 +1,21 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.opmodes.autos;
 
 import static com.pedropathing.ivy.Scheduler.schedule;
+import static com.pedropathing.ivy.commands.Commands.instant;
+import static com.pedropathing.ivy.commands.Commands.waitMs;
+import static com.pedropathing.ivy.commands.Commands.waitUntil;
 import static com.pedropathing.ivy.groups.Groups.sequential;
 import static com.pedropathing.ivy.pedro.PedroCommands.follow;
 
 import com.pedropathing.api.Paths;
 import com.pedropathing.api.PoseFactory;
-import com.pedropathing.follower.Follower;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.commands.RobotCommands;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Tracker;
@@ -20,37 +23,78 @@ import org.firstinspires.ftc.teamcode.robot.subsystems.Tracker;
 @Autonomous(name = "Auto -- v2", group = "Autonomous")
 public class AutoV2 extends RobotOpMode {
 
-    private Follower follower;
-
     private final PoseFactory poseFactory = PoseFactory.degrees();
 
-    private final Pose start = poseFactory.of(54.5, 8, 90);
-    private final Pose goGrabGarden = poseFactory.of(8, 13, -90);
-    private final Pose grabGardenOne = poseFactory.of(8, 8, -90);
-    private final Pose grabGardenTwo = poseFactory.of(8, 8, -90);
-    private final Pose goGrabFlowerOne = poseFactory.of(17.9215, 46.8422, -104.3288);
-    private final Pose grabFlowerOne = poseFactory.of(8.5451, 47.0259, -1.1221);
-    private final Pose shootLeftStart = poseFactory.of(8.5451, 47.0259, -90);
-    private final Pose shootLeft = poseFactory.of(46.7, 125, 90);
-    private final Pose shootLeftControl1 = poseFactory.of(33.4716, 65.5688, 0);
-    private final Pose shootLeftControl2 = poseFactory.of(22.5776, 102.0504, 0);
-    private final Pose grabFlowerTwo = poseFactory.of(46.7, 130, 90);
-    private final Pose parkStart = poseFactory.of(46.7, 130, 90);
-    private final Pose park = poseFactory.of(10.6891, 114.5117, 0);
+    private final Pose start = poseFactory.of(54.5, 8, -90);
+    private final Pose goGrabGarden = poseFactory.of(20.292, 10, 243);
+    private final Pose grabGardenOne = poseFactory.of(10.871, 8.769, 247.500);
+    private final Pose grabGardenTwo = poseFactory.of(9, 9, 269.687);
+    private final Pose goGrabFlowerOne = poseFactory.of(22.450, 44.661, 181.141);
+    private final Pose grabFlowerOne = poseFactory.of(12.592, 44.342, 180.883);
+    private final Pose shootLeftStart = poseFactory.of(12.592, 44.342, 180.883);
+    private final Pose shootLeft = poseFactory.of(43.486, 119.530, 91.347);
+    private final Pose shootLeftControl1 = poseFactory.of(21.7309, 22.1526, 0);
+    private final Pose shootLeftControl2 = poseFactory.of(18.3256, 99.6044, 0);
+    private final Pose grabFlowerTwo = poseFactory.of(43.066, 126.346, 89.705);
+    private final Pose parkStart = poseFactory.of(43.066, 126.346, 89.705);
+    private final Pose park = poseFactory.of(12, 111, 0);
+    private final Pose parkTurn = poseFactory.of(
+            parkStart.x() + 0.25 * (park.x() - parkStart.x()), parkStart.y() + 0.25 * (park.y() - parkStart.y()), 0);
 
     private String autoStep = "idle";
     private final ElapsedTime stepTimer = new ElapsedTime();
 
+    private Command step(String name) {
+        return instant(() -> {
+            autoStep = name;
+            stepTimer.reset();
+        });
+    }
+
+    private Command fireShot() {
+        return instant(() -> Tracker.setTrackingFrequency(80))
+                .then(waitUntil(robot.outtake::shootReady))
+                .then(RobotCommands.fireShooter(robot.outtake, robot.intake, robot.ledDriver)
+                        .raceWith(waitMs(500).then(RobotCommands.shooterTimeout(robot.intake, 500))));
+    }
+
     // Autonomous routine
     public Command autoRoutine() {
         return sequential(
-                follow(follower, goGrabGarden()),
-                follow(follower, grabGarden()),
-                follow(follower, goGrabFlowerOne()),
-                follow(follower, grabFlowerOne()),
-                follow(follower, shootLeft()),
-                follow(follower, grabFlower()),
-                follow(follower, park()));
+                step("preload shot"),
+                fireShot(),
+                step("drive to garden"),
+                follow(Robot.follower, goGrabGarden()),
+                step("pick garden"),
+                RobotCommands.pullBalls(robot.intake),
+                follow(Robot.follower, grabGarden()),
+                RobotCommands.intakeTimeout(robot.intake, 1000),
+                instant(() -> Tracker.setTrackingFrequency(80)),
+                RobotCommands.idleIntake(robot.intake),
+                step("shoot garden"),
+                fireShot(),
+                step("drive to first flower"),
+                follow(Robot.follower, goGrabFlowerOne()),
+                RobotCommands.lowerFlower(robot.intake),
+                RobotCommands.pullBalls(robot.intake),
+                step("grab first flower"),
+                follow(Robot.follower, grabFlowerOne()),
+                RobotCommands.intakeTimeout(robot.intake, 1000),
+                RobotCommands.idleIntake(robot.intake),
+                step("shoot first flower"),
+                follow(Robot.follower, shootLeft()),
+                fireShot(),
+                step("grab second flower"),
+                RobotCommands.pullBalls(robot.intake),
+                follow(Robot.follower, grabFlower()),
+                RobotCommands.intakeTimeout(robot.intake, 1000),
+                RobotCommands.idleIntake(robot.intake),
+                step("shoot second flower"),
+                fireShot(),
+                step("park"),
+                follow(Robot.follower, park()),
+                RobotCommands.raiseFlower(robot.intake),
+                step("complete"));
     }
 
     @Override
@@ -116,11 +160,11 @@ public class AutoV2 extends RobotOpMode {
     }
 
     public Path goGrabFlowerOne() {
-        return Paths.line(grabGardenTwo, goGrabFlowerOne).reverseTangent();
+        return Paths.line(grabGardenTwo, goGrabFlowerOne).linear(grabGardenTwo, goGrabFlowerOne);
     }
 
     public Path grabFlowerOne() {
-        return Paths.line(goGrabFlowerOne, grabFlowerOne).reverseTangent();
+        return Paths.line(goGrabFlowerOne, grabFlowerOne).constant(grabFlowerOne);
     }
 
     public Path shootLeft() {
@@ -133,6 +177,8 @@ public class AutoV2 extends RobotOpMode {
     }
 
     public Path park() {
-        return Paths.line(parkStart, park).linear(parkStart, park);
+        return Paths.path(
+                Paths.line(parkStart, parkTurn).constant(parkStart),
+                Paths.line(parkTurn, park).constant(park));
     }
 }
