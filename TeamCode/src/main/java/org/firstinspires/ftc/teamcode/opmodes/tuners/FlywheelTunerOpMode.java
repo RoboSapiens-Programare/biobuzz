@@ -37,7 +37,8 @@ public class FlywheelTunerOpMode extends OpMode {
     protected TelemetryManager.TelemetryWrapper telemetry;
 
     private static final MotorSpec[] MOTORS = {
-        new MotorSpec("flywheel", true),
+            new MotorSpec("flywheel", true),
+            new MotorSpec("flywheel_2", false)
     };
 
     // FF ramp stage

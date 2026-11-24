@@ -36,16 +36,17 @@ public class Outtake implements Subsystem {
     public static double GATE_OPEN = 0.76;
     public static double GATE_CLOSED = 0.63;
 
-    public static double kP = 0.0229;
-    public static double kI = 0.5015;
-    public static double kD = 0.0003;
-    public static double kS = 0.1720;
-    public static double kV = 0.0005;
+    public static double kP = 0.01145;
+    public static double kI = 0.25075;
+    public static double kD = 0.00015;
+    public static double kS = 0.0860;
+    public static double kV = 0.00025;
 
     public double pos = 0;
 
     public Outtake(HardwareMap hwMap) {
         flywheel.addMotor(hwMap.get(DcMotorEx.class, "flywheel"), true)
+                .addMotor(hwMap.get(DcMotorEx.class, "flywheel_2"))
                 .setEncoder(hwMap.get(DcMotorEx.class, "flywheel"))
                 .setPIDConstants(kP, kI, kD)
                 .setFFConstants(kS, kV, 0)
