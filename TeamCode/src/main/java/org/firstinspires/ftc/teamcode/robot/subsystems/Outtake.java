@@ -36,13 +36,17 @@ public class Outtake implements Subsystem {
     public static double GATE_OPEN = 0.76;
     public static double GATE_CLOSED = 0.63;
 
-    public static double kP = 0.01145;
-    public static double kI = 0.25075;
-    public static double kD = 0.00015;
-    public static double kS = 0.0860;
-    public static double kV = 0.00025;
+    public static double kP = 0.0202;
+    public static double kI = 1.2002;
+    public static double kD = 0.0001;
+    public static double kS = 0.0911;
+    public static double kV = 0.0004;
 
     public double pos = 0;
+    public static double hoodAngle = 0.05;
+    public double hoodPos = 0.05;
+
+    private final CachingServo hood;
 
     public Outtake(HardwareMap hwMap) {
         flywheel.addMotor(hwMap.get(DcMotorEx.class, "flywheel"), true)
@@ -55,6 +59,8 @@ public class Outtake implements Subsystem {
                 .setIdlingPower(0.2);
 
         gate = new CachingServo(hwMap.get(Servo.class, "gate"));
+
+        hood = new CachingServo(hwMap.get(Servo.class, "hood"));
 
         pivot_left = new CachingServo(hwMap.get(Servo.class, "pivot_left"));
 
@@ -109,6 +115,17 @@ public class Outtake implements Subsystem {
         } else {
             setGate(GATE_CLOSED);
         }
+
+        if (tracker != null && Tracker.isEnabled() && !Robot.TUNING) {
+            setHood(tracker.getHood());
+        } else {
+            setHood(hoodAngle);
+        }
+    }
+
+    public void setHood(double position) {
+        hoodPos = Math.max(0, Math.min(1, position));
+        hood.setPosition(hoodPos);
     }
 
     private void setGate(double position) {
@@ -176,6 +193,7 @@ public class Outtake implements Subsystem {
     public void stop() {
         firing = false;
         setGate(GATE_CLOSED);
+        setHood(hoodAngle);
         rollers.idle();
         flywheel.stop();
     }

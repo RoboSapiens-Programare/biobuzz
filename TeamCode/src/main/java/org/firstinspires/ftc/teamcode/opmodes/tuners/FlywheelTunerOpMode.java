@@ -205,7 +205,7 @@ public class FlywheelTunerOpMode extends OpMode {
      * (i.e. launches the ring), matching the Outtake subsystem convention.
      */
     private double getVelocity() {
-        return encoder.getVelocity() * (MOTORS[0].reversed ? -1 : 1);
+        return encoder.getVelocity() * (MOTORS[0].reversed ? 1 : -1);
     }
 
     private void setAllPower(double power) {

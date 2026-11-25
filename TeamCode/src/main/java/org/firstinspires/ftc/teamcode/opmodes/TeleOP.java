@@ -22,6 +22,7 @@ import org.firstinspires.ftc.teamcode.commands.RobotCommands;
 import org.firstinspires.ftc.teamcode.robot.FileTelemetry.FileTelemetry;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
+import org.firstinspires.ftc.teamcode.robot.subsystems.Outtake;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Tracker;
 
 @TeleOp
@@ -141,6 +142,12 @@ public class TeleOP extends RobotOpMode {
                 tuningVelocity = Math.max(0, tuningVelocity - 5);
                 robot.outtake.setVelocity(tuningVelocity);
             }
+            if (gamepad1.triangleWasPressed()) {
+                Outtake.hoodAngle = Math.min(1, Outtake.hoodAngle + 0.01);
+            }
+            if (gamepad1.circleWasPressed()) {
+                Outtake.hoodAngle = Math.max(0, Outtake.hoodAngle - 0.01);
+            }
             if (gamepad1.squareWasPressed()) {
                 saveTuningSnapshot();
             }
@@ -218,6 +225,7 @@ public class TeleOP extends RobotOpMode {
                 String.format("%.0f / %.0f", robot.outtake.getCurrentSpeed(), robot.outtake.getTarget()));
         t.addData("Ready", robot.outtake.shootReady());
         t.addData("Pivot pos", String.format("%.3f", robot.outtake.pos));
+        t.addData("Hood pos", String.format("%.3f", robot.outtake.hoodPos));
 
         if (diagnosticsDue()) {
             driveCurrentFLFR = String.format(
@@ -248,6 +256,7 @@ public class TeleOP extends RobotOpMode {
         if (Robot.TUNING) {
             t.addLine("== Tuning ==");
             t.addData("Target velocity", String.format("%.0f", robot.outtake.getTarget()));
+            t.addData("Hood angle", String.format("%.2f", Outtake.hoodAngle));
             t.addData("Distance to goal", String.format("%.2f", robotPose.distance(Tracker.getTrackPose())));
             t.addData("Snapshots", tuningLog == null ? 0 : tuningLog.getSnapshotCount());
             t.addData(
@@ -266,6 +275,7 @@ public class TeleOP extends RobotOpMode {
         tuningLog = new FileTelemetry(FileTelemetry.Type.JSON_ARRAY, tuningFileForToday());
         tuningLog.addField("dist");
         tuningLog.addField("vel");
+        tuningLog.addField("hood");
     }
 
     private void saveTuningSnapshot() {
@@ -273,9 +283,10 @@ public class TeleOP extends RobotOpMode {
 
         double distance = Robot.follower.pose().distance(Tracker.getTrackPose());
         double velocity = robot.outtake.getTarget();
+        double hood = Outtake.hoodAngle;
 
         try {
-            tuningLog.takeSnapshot(distance, velocity);
+            tuningLog.takeSnapshot(distance, velocity, hood);
             tuningError = "";
         } catch (RuntimeException e) {
             tuningError = e.toString();

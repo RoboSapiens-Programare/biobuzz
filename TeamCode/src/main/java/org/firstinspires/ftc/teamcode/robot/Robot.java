@@ -41,7 +41,7 @@ public class Robot {
         intake = new Intake(hwMap);
 
         tracker = new Tracker();
-        outtake.setTracker(tracker);
+//        outtake.setTracker(tracker);
 
         ledDriver = new LEDDriver(hwMap);
 

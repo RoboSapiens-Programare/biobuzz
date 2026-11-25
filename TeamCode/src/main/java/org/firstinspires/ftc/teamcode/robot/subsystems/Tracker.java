@@ -14,6 +14,7 @@ public class Tracker implements Subsystem {
     private static double periodSec = 1.0 / 30;
     private static double lastTrackAngle = 0;
     private static double lastVelocity = 0;
+    private static double lastHood = 0.05;
     private static int angleVersion = 0;
     private static boolean hasComputed = false;
     private static boolean enabled = false;
@@ -28,6 +29,10 @@ public class Tracker implements Subsystem {
     public static double c0 = 1505.58369314;
     public static double c1 = -1.15127052318;
     public static double c2 = 0.0426526267;
+
+    public static double hoodC0 = 0.05;
+    public static double hoodC1 = 0;
+    public static double hoodC2 = 0;
 
     private static boolean sotmEnabled = true;
     private static double sotmOffset = 0;
@@ -95,6 +100,10 @@ public class Tracker implements Subsystem {
         return lastVelocity;
     }
 
+    public double getHood() {
+        return lastHood;
+    }
+
     public static int getAngleVersion() {
         return angleVersion;
     }
@@ -102,6 +111,11 @@ public class Tracker implements Subsystem {
     private double computeVelocity(double dist) {
         return c0 + dist * (c1 + dist * c2);
         //        return 1000;
+    }
+
+    private double computeHood(double dist) {
+        double hood = hoodC0 + dist * (hoodC1 + dist * hoodC2);
+        return Math.max(0, Math.min(1, hood));
     }
 
     private static double wrapAngle(double angle) {
@@ -121,6 +135,7 @@ public class Tracker implements Subsystem {
         rightHive = true;
         lastTrackAngle = 0;
         lastVelocity = 0;
+        lastHood = hoodC0;
     }
 
     @Override
@@ -161,6 +176,7 @@ public class Tracker implements Subsystem {
 
         lastTrackAngle = angle;
         lastVelocity = computeVelocity(dist);
+        lastHood = computeHood(dist);
         angleVersion++;
     }
 
@@ -170,6 +186,7 @@ public class Tracker implements Subsystem {
         rightHive = true;
         lastTrackAngle = 0;
         lastVelocity = 0;
+        lastHood = hoodC0;
     }
 
     @Override
