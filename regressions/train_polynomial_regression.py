@@ -46,11 +46,12 @@ def loocv_rmse(xs, ys, degree):
     return float(np.sqrt(np.mean(np.array(errors) ** 2)))
 
 
-def java_snippet(coeffs):
+def java_snippet(coeffs, method_name="computeVelocity"):
     degree = len(coeffs) - 1
     terms = " + ".join(f"c{i} * d**{i}" if i > 1 else ("c1 * d" if i == 1 else "c0") for i in range(degree + 1))
     lines = []
-    lines.append("private double computeVelocity(double dist) {")
+    method_name = method_name
+    lines.append(f"private double {method_name}(double dist) {{")
     lines.append(f"        // tune regression: v = {terms.replace(' * ', '*').replace('d**', 'd^').replace('d^1', 'd')}")
     for i, c in enumerate(coeffs):
         lines.append(f"        final double c{i} = {format(c, '.12g')};")
@@ -66,8 +67,7 @@ def java_snippet(coeffs):
             inner = f"c{i} + dist * {wrapped}"
         wrapped = inner if " " not in inner and "(" not in inner else f"({inner})"
         horner = f"c0 + dist * {wrapped}"
-    lines.append(f"        //        return {horner};")
-    lines.append("        return 1000;")
+    lines.append(f"        return {horner};")
     lines.append("    }")
     return "\n".join(lines)
 
@@ -79,6 +79,7 @@ def main():
     parser.add_argument("--x-key", default="dist", help="Key used as independent variable")
     parser.add_argument("--y-key", default="vel", help="Key used as dependent variable")
     parser.add_argument("--use", type=int, metavar="DEGREE", help="Print Java snippet for the given polynomial degree")
+    parser.add_argument("--method-name", default="computeVelocity", help="Name of the generated Java method")
     parser.add_argument("--degrees", default="1,2,3,4,5", help="Comma-separated degrees to evaluate in default mode")
     parser.add_argument("--plot-output", default="regression_plot.png", help="Output path for the plot")
     args = parser.parse_args()
@@ -97,7 +98,7 @@ def main():
         if degree < 0 or degree > n - 1:
             raise ValueError(f"Degree must be between 0 and {n - 1}")
         coeffs, r2, rmse = fit(xs, ys, degree)
-        print(java_snippet(coeffs))
+        print(java_snippet(coeffs, method_name=args.method_name))
         return
 
     results = []

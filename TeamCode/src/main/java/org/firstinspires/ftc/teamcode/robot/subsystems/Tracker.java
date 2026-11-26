@@ -2,8 +2,10 @@ package org.firstinspires.ftc.teamcode.robot.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.math.Pose;
+import com.pedropathing.math.Velocity;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.robot.HivePoses;
+import org.firstinspires.ftc.teamcode.robot.Models;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
 @Configurable
@@ -26,16 +28,9 @@ public class Tracker implements Subsystem {
     private static final double SWITCH_TO_LEFT_Y = 73;
     private static final double SWITCH_TO_RIGHT_Y = 71;
     private static final double MAX_RANGE = Math.toRadians((double) (360 * 3) / 4 - 30);
-    public static double c0 = 1505.58369314;
-    public static double c1 = -1.15127052318;
-    public static double c2 = 0.0426526267;
+    private static double lastTof = 0;
 
-    public static double hoodC0 = 0.05;
-    public static double hoodC1 = 0;
-    public static double hoodC2 = 0;
-
-    private static boolean sotmEnabled = true;
-    private static double sotmOffset = 0;
+    private static boolean sotmEnabled = false;
 
     public static void setTrackingFrequency(double hz) {
         periodSec = hz > 0 ? 1.0 / hz : 0;
@@ -80,16 +75,20 @@ public class Tracker implements Subsystem {
         return rightHive ? HivePoses.RIGHT : HivePoses.LEFT;
     }
 
-    public static void setSOTM(double offset) {
-        sotmOffset = offset;
-    }
-
     public static void setSOTMEnabled(boolean e) {
         sotmEnabled = e;
     }
 
     public static boolean isSOTMEnabled() {
         return sotmEnabled;
+    }
+
+    public static void enableSOTM() {
+        sotmEnabled = true;
+    }
+
+    public static void disableSOTM() {
+        sotmEnabled = false;
     }
 
     public double getTrackAngle() {
@@ -104,19 +103,15 @@ public class Tracker implements Subsystem {
         return lastHood;
     }
 
+    public double getTof() {
+        return lastTof;
+    }
+
     public static int getAngleVersion() {
         return angleVersion;
     }
 
-    private double computeVelocity(double dist) {
-        return c0 + dist * (c1 + dist * c2);
-        //        return 1000;
-    }
-
-    private double computeHood(double dist) {
-        double hood = hoodC0 + dist * (hoodC1 + dist * hoodC2);
-        return Math.max(0, Math.min(1, hood));
-    }
+    // Regression models live in Models.
 
     private static double wrapAngle(double angle) {
         angle %= 2 * Math.PI;
@@ -131,11 +126,13 @@ public class Tracker implements Subsystem {
     @Override
     public void init() {
         enabled = false;
+        sotmEnabled = false;
         hasComputed = false;
         rightHive = true;
         lastTrackAngle = 0;
         lastVelocity = 0;
-        lastHood = hoodC0;
+        lastHood = Models.hood(0);
+        lastTof = Models.tof(0);
     }
 
     @Override
@@ -162,33 +159,45 @@ public class Tracker implements Subsystem {
             return;
         }
 
+        if (sotmEnabled) {
+            Velocity v = Robot.follower.velocity();
+
+            double tof = Models.tof(dist);
+
+            dx -= v.vx * tof;
+            dy -= v.vy * tof;
+            dist = Math.hypot(dx, dy);
+        }
+
+
         double bearing = wrapAngle(Math.atan2(dy, dx) - robotPose.heading());
         double angle = SHOOTER_CENTER_OFFSET - bearing;
 
         if (angle > Math.PI) {
             angle -= 2 * Math.PI;
         }
-        if (sotmEnabled && sotmOffset != 0) {
-            angle = wrapAngle(angle + sotmOffset);
-        }
-
         angle = Math.max(-MAX_RANGE / 2, Math.min(MAX_RANGE / 2, angle));
 
         lastTrackAngle = angle;
-        lastVelocity = computeVelocity(dist);
-        lastHood = computeHood(dist);
+        lastVelocity = Models.velocity(dist);
+        lastHood = Models.hood(dist);
+        lastTof = Models.tof(dist);
         angleVersion++;
     }
 
     @Override
     public void reset() {
+        sotmEnabled = false;
         hasComputed = false;
         rightHive = true;
         lastTrackAngle = 0;
         lastVelocity = 0;
-        lastHood = hoodC0;
+        lastHood = Models.hood(0);
+        lastTof = Models.tof(0);
     }
 
     @Override
-    public void stop() {}
+    public void stop() {
+        sotmEnabled = false;
+    }
 }
