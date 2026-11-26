@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes.tuners;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.utils.ControlSystems.Tuners.PIDTuner;
@@ -25,6 +26,7 @@ public class PIDTunerOpMode extends OpMode {
 
     private CachingDcMotorEx motor, motor2;
     private PIDTuner tuner;
+    private final ElapsedTime timeoutTimer = new ElapsedTime();
 
     @Override
     public void init() {
@@ -34,12 +36,19 @@ public class PIDTunerOpMode extends OpMode {
 
     @Override
     public void start() {
+        timeoutTimer.reset();
         tuner.start(motor.getVelocity());
     }
 
     @Override
     public void loop() {
         Robot.resetCache();
+
+        if (timeoutTimer.seconds() > TIMEOUT_SECONDS) {
+            motor.setPower(0);
+            telemetry.addLine("TIMEOUT — relay did not converge");
+            return;
+        }
 
         if (tuner.getState() == PIDTuner.TuningStates.COMPLETE || tuner.getState() == PIDTuner.TuningStates.FAILED) {
             motor.setPower(0);

@@ -19,6 +19,7 @@ import java.util.Locale;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.commands.RobotCommands;
+import org.firstinspires.ftc.teamcode.robot.ActionLogger;
 import org.firstinspires.ftc.teamcode.robot.FileTelemetry.FileTelemetry;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.opmode.RobotOpMode;
@@ -52,6 +53,7 @@ public class TeleOP extends RobotOpMode {
     private String tuningError = "";
 
     private boolean lastFire, lastPull, lastPush, lastFlower, lastReset, lastManual;
+    private boolean lastDriverMoving;
     private boolean rightHeld, leftHeld;
     private int lastBallCount = 0;
     private String driveCurrentFLFR = "",
@@ -120,6 +122,12 @@ public class TeleOP extends RobotOpMode {
                 powers = new DrivePowers(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
                 break;
         }
+
+        boolean driverMoving = Math.abs(powers.forward()) + Math.abs(powers.strafe()) + Math.abs(powers.turn()) > 0.05;
+        if (driverMoving && !lastDriverMoving) {
+            ActionLogger.log("drive");
+        }
+        lastDriverMoving = driverMoving;
 
         follower.manual(powers);
 
@@ -283,7 +291,7 @@ public class TeleOP extends RobotOpMode {
 
         double distance = Robot.follower.pose().distance(Tracker.getTrackPose());
         double velocity = robot.outtake.getTarget();
-        double hood = Outtake.hoodAngle;
+        double hood = robot.outtake.hoodPos;
 
         try {
             tuningLog.takeSnapshot(distance, velocity, hood);

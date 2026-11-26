@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.opmodes.autos;
 import static com.pedropathing.ivy.Scheduler.schedule;
 import static com.pedropathing.ivy.commands.Commands.*;
 import static com.pedropathing.ivy.groups.Groups.sequential;
-import static com.pedropathing.ivy.pedro.PedroCommands.follow;
 
 import com.pedropathing.api.Paths;
 import com.pedropathing.api.PoseFactory;
@@ -61,23 +60,23 @@ public class WattsUpAuto extends RobotOpMode {
                 step("preload shot"),
                 fireShot(),
                 step("drive to garden"),
-                follow(Robot.follower, goGrabGarden()),
+                RobotCommands.followPath(Robot.follower, goGrabGarden()),
                 step("pick garden"),
                 instant(() -> Tracker.setTrackingFrequency(30)),
                 RobotCommands.pullBalls(robot.intake),
-                follow(Robot.follower, grabGarden()),
+                RobotCommands.followPath(Robot.follower, grabGarden()),
                 RobotCommands.intakeTimeout(robot.intake, 1000),
                 RobotCommands.idleIntake(robot.intake),
                 step("drive to shoot"),
                 instant(() -> Tracker.setTrackingFrequency(80)),
-                follow(Robot.follower, shootOne()),
+                RobotCommands.followPath(Robot.follower, shootOne()),
                 step("shoot one"),
                 RobotCommands.lowerFlower(robot.intake),
                 fireShot(),
                 step("go to flower"),
                 instant(() -> Tracker.setTrackingFrequency(30)),
                 RobotCommands.pullBalls(robot.intake),
-                follow(Robot.follower, grabFlower()),
+                RobotCommands.followPath(Robot.follower, grabFlower()),
                 step("pick flower"),
                 instant(() -> Tracker.setTrackingFrequency(80)),
                 RobotCommands.intakeTimeout(robot.intake, 1000),
@@ -85,7 +84,7 @@ public class WattsUpAuto extends RobotOpMode {
                 step("shoot flower"),
                 fireShot(),
                 step("park"),
-                follow(Robot.follower, park()),
+                RobotCommands.followPath(Robot.follower, park()),
                 RobotCommands.raiseFlower(robot.intake),
                 step("done"));
     }

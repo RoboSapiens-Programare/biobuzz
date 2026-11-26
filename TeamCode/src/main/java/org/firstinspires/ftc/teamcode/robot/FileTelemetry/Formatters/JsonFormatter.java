@@ -9,7 +9,7 @@ import java.util.Map;
  * Values keep their runtime type, so numbers stay numbers, booleans stay booleans and
  * enums serialize as their name (e.g. "SPOOLING").
  */
-public class JsonFormatter extends org.firstinspires.ftc.teamcode.robot.fileTelemetry.formatters.Formatter {
+public class JsonFormatter extends org.firstinspires.ftc.teamcode.robot.FileTelemetry.Formatters.Formatter {
     private final Gson gson = new Gson();
 
     @Override

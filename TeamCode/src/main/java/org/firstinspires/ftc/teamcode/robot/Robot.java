@@ -28,7 +28,8 @@ public class Robot {
     private static List<LynxModule> allHubs = Collections.emptyList();
 
     public static boolean TUNING = false;
-    //    public static Pose transitionPose = new Pose(63, 9, Math.PI / 2);
+    public static boolean USE_LIMELIGHT = false;
+    public static boolean VERBOSE = false;
 
     public Robot(HardwareMap hwMap) {
         allHubs = hwMap.getAll(LynxModule.class);
@@ -41,11 +42,15 @@ public class Robot {
         intake = new Intake(hwMap);
 
         tracker = new Tracker();
-//        outtake.setTracker(tracker);
+        outtake.setTracker(tracker);
+
+        if (USE_LIMELIGHT) llLocator = new LLLocator(hwMap);
 
         ledDriver = new LEDDriver(hwMap);
 
         follower = Constants.create(hwMap);
+
+        ActionLogger.init(hwMap, this);
     }
 
     public static void resetCache() {
@@ -60,6 +65,8 @@ public class Robot {
         intake.update();
         outtake.update();
         ledDriver.update();
+
+        if (USE_LIMELIGHT) llLocator.update();
     }
 
     public void init() {
@@ -67,6 +74,8 @@ public class Robot {
         outtake.init();
         tracker.init();
         ledDriver.init();
+
+        if (USE_LIMELIGHT) llLocator.init();
 
         outtake.setTracker(tracker);
     }
@@ -76,5 +85,11 @@ public class Robot {
         outtake.stop();
         tracker.stop();
         ledDriver.stop();
+
+        if (USE_LIMELIGHT) llLocator.stop();
+
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
     }
 }

@@ -48,25 +48,24 @@ def loocv_rmse(xs, ys, degree):
 
 def java_snippet(coeffs, method_name="computeVelocity"):
     degree = len(coeffs) - 1
-    terms = " + ".join(f"c{i} * d**{i}" if i > 1 else ("c1 * d" if i == 1 else "c0") for i in range(degree + 1))
+    prefix = method_name if method_name else "value"
+    terms = " + ".join(f"{prefix}C{i} * d**{i}" if i > 1 else (f"{prefix}C1 * d" if i == 1 else f"{prefix}C0") for i in range(degree + 1))
     lines = []
-    method_name = method_name
     lines.append(f"private double {method_name}(double dist) {{")
-    lines.append(f"        // tune regression: v = {terms.replace(' * ', '*').replace('d**', 'd^').replace('d^1', 'd')}")
+    lines.append(f"        // tune regression: {method_name} = {terms.replace(' * ', '*').replace('d**', 'd^').replace('d^1', 'd')}")
     for i, c in enumerate(coeffs):
-        lines.append(f"        final double c{i} = {format(c, '.12g')};")
-    # Horner form
+        lines.append(f"        // {prefix}C{i} = {format(c, '.12g')}")
     if degree == 0:
-        horner = "c0"
+        horner = f"{prefix}C0"
     elif degree == 1:
-        horner = "c0 + dist * c1"
+        horner = f"{prefix}C0 + dist * {prefix}C1"
     else:
-        inner = f"c{degree}"
+        inner = f"{prefix}C{degree}"
         for i in range(degree - 1, 0, -1):
             wrapped = inner if " " not in inner and "(" not in inner else f"({inner})"
-            inner = f"c{i} + dist * {wrapped}"
+            inner = f"{prefix}C{i} + dist * {wrapped}"
         wrapped = inner if " " not in inner and "(" not in inner else f"({inner})"
-        horner = f"c0 + dist * {wrapped}"
+        horner = f"{prefix}C0 + dist * {wrapped}"
     lines.append(f"        return {horner};")
     lines.append("    }")
     return "\n".join(lines)

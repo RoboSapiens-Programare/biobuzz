@@ -5,6 +5,7 @@ import com.pedropathing.ivy.Scheduler;
 import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.robot.ActionLogger;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.utils.FrequencyMonitor;
 
@@ -89,6 +90,7 @@ public abstract class RobotOpMode extends OpMode {
 
     @Override
     public final void start() {
+        ActionLogger.start();
         onStart();
     }
 
@@ -156,6 +158,7 @@ public abstract class RobotOpMode extends OpMode {
 
     @Override
     public final void stop() {
+        ActionLogger.close();
         robot.stop();
         onStop();
     }

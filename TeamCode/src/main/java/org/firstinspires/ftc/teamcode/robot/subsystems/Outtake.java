@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import dev.frozenmilk.dairy.cachinghardware.CachingServo;
 import org.firstinspires.ftc.teamcode.mechanisms.Flywheel;
 import org.firstinspires.ftc.teamcode.mechanisms.Roller;
+import org.firstinspires.ftc.teamcode.robot.ActionLogger;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
 @Configurable
@@ -68,9 +69,6 @@ public class Outtake implements Subsystem {
 
         pivot_left.setCachingTolerance(PIVOT_TOLERANCE);
         pivot_right.setCachingTolerance(PIVOT_TOLERANCE);
-
-        pivot_right.getController().pwmDisable();
-        pivot_left.getController().pwmDisable();
     }
 
     @Override
@@ -110,7 +108,7 @@ public class Outtake implements Subsystem {
 
         flywheel.update();
 
-        if (firing && flywheel.mode == Flywheel.FlywheelMode.PRIMED) {
+        if (firing && flywheel.mode == Flywheel.FlywheelMode.PRIMED && shootReady()) {
             setGate(GATE_OPEN);
         } else {
             setGate(GATE_CLOSED);
@@ -133,6 +131,9 @@ public class Outtake implements Subsystem {
             return;
         }
         lastGatePosition = position;
+        if (position == GATE_OPEN) {
+            ActionLogger.log("shoot");
+        }
         gate.setPosition(position);
     }
 
@@ -173,9 +174,9 @@ public class Outtake implements Subsystem {
     }
 
     private double angleToPosition(double rad) {
+        rad += aimOffset;
         rad = Math.max(Math.min(rad, PIVOT_RANGE / 2), -PIVOT_RANGE / 2); // clip
         rad += PIVOT_RANGE / 2;
-        rad += aimOffset;
         return Math.max(0, Math.min(1, rad / PIVOT_RANGE));
     }
 

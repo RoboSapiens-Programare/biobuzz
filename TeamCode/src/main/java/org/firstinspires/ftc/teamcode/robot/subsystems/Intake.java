@@ -48,7 +48,7 @@ public class Intake implements Subsystem {
         rollerOne.addMotor(hwMap.get(DcMotorEx.class, "roller_motor"), true);
         rollerTwo.addMotor(hwMap.get(DcMotorEx.class, "roller_motor_2"));
 
-        rollerOne.setPower(0.86);
+        rollerOne.setPower(PULL_POWER);
         rollerTwo.setPower(0.41);
 
         pollenOneSensor = hwMap.get(DistanceSensor.class, "pollen_one_sensor");
@@ -173,5 +173,13 @@ public class Intake implements Subsystem {
 
     public double getMaxCurrent() {
         return Math.max(rollerOne.getMaxCurrent(), rollerTwo.getMaxCurrent());
+    }
+
+    public double getRollerOneCurrent() {
+        return rollerOne.getMaxCurrent();
+    }
+
+    public double getRollerTwoCurrent() {
+        return rollerTwo.getMaxCurrent();
     }
 }

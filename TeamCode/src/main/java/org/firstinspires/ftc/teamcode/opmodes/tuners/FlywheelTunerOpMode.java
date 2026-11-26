@@ -36,10 +36,7 @@ public class FlywheelTunerOpMode extends OpMode {
     /** One entry per flywheel motor. The first entry is the velocity encoder. */
     protected TelemetryManager.TelemetryWrapper telemetry;
 
-    private static final MotorSpec[] MOTORS = {
-            new MotorSpec("flywheel", true),
-            new MotorSpec("flywheel_2", false)
-    };
+    private static final MotorSpec[] MOTORS = {new MotorSpec("flywheel", true), new MotorSpec("flywheel_2", false)};
 
     // FF ramp stage
     private static final double MAX_POWER = 0.8;
@@ -157,6 +154,9 @@ public class FlywheelTunerOpMode extends OpMode {
     @Override
     public void stop() {
         setAllPower(0);
+        for (LynxModule hub : hubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
     }
 
     private void applyGainsAndStartVerify() {

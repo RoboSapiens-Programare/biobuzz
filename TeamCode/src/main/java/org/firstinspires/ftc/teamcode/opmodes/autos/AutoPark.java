@@ -5,7 +5,6 @@ import static com.pedropathing.ivy.commands.Commands.instant;
 import static com.pedropathing.ivy.commands.Commands.waitMs;
 import static com.pedropathing.ivy.commands.Commands.waitUntil;
 import static com.pedropathing.ivy.groups.Groups.sequential;
-import static com.pedropathing.ivy.pedro.PedroCommands.follow;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.api.Paths;
@@ -50,7 +49,12 @@ public class AutoPark extends RobotOpMode {
 
     // Autonomous routine
     public Command autoRoutine() {
-        return sequential(step("park"), waitMs(delayMs), fireShot(), follow(Robot.follower, path1()), step("complete"));
+        return sequential(
+                step("park"),
+                waitMs(delayMs),
+                fireShot(),
+                RobotCommands.followPath(Robot.follower, path1()),
+                step("complete"));
     }
 
     @Override

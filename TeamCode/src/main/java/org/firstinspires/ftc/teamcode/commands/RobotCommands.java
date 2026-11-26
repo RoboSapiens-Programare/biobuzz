@@ -1,9 +1,13 @@
 package org.firstinspires.ftc.teamcode.commands;
 
+import com.pedropathing.follower.Follower;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.commands.Commands;
+import com.pedropathing.ivy.pedro.PedroCommands;
+import com.pedropathing.paths.Path;
 import java.util.function.BooleanSupplier;
 import org.firstinspires.ftc.teamcode.Prism.Color;
+import org.firstinspires.ftc.teamcode.robot.ActionLogger;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.robot.subsystems.LEDDriver;
 import org.firstinspires.ftc.teamcode.robot.subsystems.Outtake;
@@ -87,10 +91,11 @@ public final class RobotCommands {
     }
 
     private static void feedIfReady(Outtake outtake, Intake intake, boolean[] feeding) {
-        if (feeding[0] || outtake.shootReady()) {
+        if (outtake.shootReady()) {
             feeding[0] = true;
             intake.pullBalls(true);
         } else {
+            feeding[0] = false;
             intake.idle();
         }
     }
@@ -104,18 +109,26 @@ public final class RobotCommands {
 
     private static void stopFiringNow(Outtake outtake, Intake intake) {
         outtake.setFiring(false);
-        //        outtake.startIdling();
+        outtake.startIdling();
         intake.idle();
     }
 
     /** Pulls balls into the mechanism. */
     public static Command pullBalls(Intake intake) {
-        return Commands.instant(intake::pullBalls).requiring(intake);
+        return Commands.instant(() -> {
+                    intake.pullBalls();
+                    ActionLogger.log("intake");
+                })
+                .requiring(intake);
     }
 
     /** Pushes balls back out (unclog). */
     public static Command pushBalls(Intake intake) {
-        return Commands.instant(intake::pushBalls).requiring(intake);
+        return Commands.instant(() -> {
+                    intake.pushBalls();
+                    ActionLogger.log("push");
+                })
+                .requiring(intake);
     }
 
     /** Pushes balls out briefly, then idles the intake. */
@@ -156,5 +169,9 @@ public final class RobotCommands {
 
     public static Command shooterTimeout(Intake intake, int ms) {
         return Commands.waitUntil(() -> intake.getBallCount() == 0).raceWith(Commands.waitMs(ms));
+    }
+
+    public static Command followPath(Follower follower, Path path) {
+        return Commands.instant(() -> ActionLogger.log("drive")).then(PedroCommands.follow(follower, path));
     }
 }

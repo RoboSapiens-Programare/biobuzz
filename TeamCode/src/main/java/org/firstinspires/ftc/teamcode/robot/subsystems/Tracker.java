@@ -111,8 +111,6 @@ public class Tracker implements Subsystem {
         return angleVersion;
     }
 
-    // Regression models live in Models.
-
     private static double wrapAngle(double angle) {
         angle %= 2 * Math.PI;
         if (angle > Math.PI) {
@@ -159,16 +157,14 @@ public class Tracker implements Subsystem {
             return;
         }
 
+        double tof = Models.tof(dist);
         if (sotmEnabled) {
             Velocity v = Robot.follower.velocity();
-
-            double tof = Models.tof(dist);
 
             dx -= v.vx * tof;
             dy -= v.vy * tof;
             dist = Math.hypot(dx, dy);
         }
-
 
         double bearing = wrapAngle(Math.atan2(dy, dx) - robotPose.heading());
         double angle = SHOOTER_CENTER_OFFSET - bearing;
@@ -181,7 +177,7 @@ public class Tracker implements Subsystem {
         lastTrackAngle = angle;
         lastVelocity = Models.velocity(dist);
         lastHood = Models.hood(dist);
-        lastTof = Models.tof(dist);
+        lastTof = tof;
         angleVersion++;
     }
 

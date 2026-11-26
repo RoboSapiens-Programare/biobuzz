@@ -5,7 +5,6 @@ import static com.pedropathing.ivy.commands.Commands.instant;
 import static com.pedropathing.ivy.commands.Commands.waitMs;
 import static com.pedropathing.ivy.commands.Commands.waitUntil;
 import static com.pedropathing.ivy.groups.Groups.sequential;
-import static com.pedropathing.ivy.pedro.PedroCommands.follow;
 
 import com.pedropathing.api.Paths;
 import com.pedropathing.api.PoseFactory;
@@ -64,35 +63,35 @@ public class AutoV2 extends RobotOpMode {
                 step("preload shot"),
                 fireShot(),
                 step("drive to garden"),
-                follow(Robot.follower, goGrabGarden()),
+                RobotCommands.followPath(Robot.follower, goGrabGarden()),
                 step("pick garden"),
                 RobotCommands.pullBalls(robot.intake),
-                follow(Robot.follower, grabGarden()),
+                RobotCommands.followPath(Robot.follower, grabGarden()),
                 RobotCommands.intakeTimeout(robot.intake, 1000),
                 instant(() -> Tracker.setTrackingFrequency(80)),
                 RobotCommands.idleIntake(robot.intake),
                 step("shoot garden"),
                 fireShot(),
                 step("drive to first flower"),
-                follow(Robot.follower, goGrabFlowerOne()),
+                RobotCommands.followPath(Robot.follower, goGrabFlowerOne()),
                 RobotCommands.lowerFlower(robot.intake),
                 RobotCommands.pullBalls(robot.intake),
                 step("grab first flower"),
-                follow(Robot.follower, grabFlowerOne()),
+                RobotCommands.followPath(Robot.follower, grabFlowerOne()),
                 RobotCommands.intakeTimeout(robot.intake, 1000),
                 RobotCommands.idleIntake(robot.intake),
                 step("shoot first flower"),
-                follow(Robot.follower, shootLeft()),
+                RobotCommands.followPath(Robot.follower, shootLeft()),
                 fireShot(),
                 step("grab second flower"),
                 RobotCommands.pullBalls(robot.intake),
-                follow(Robot.follower, grabFlower()),
+                RobotCommands.followPath(Robot.follower, grabFlower()),
                 RobotCommands.intakeTimeout(robot.intake, 1000),
                 RobotCommands.idleIntake(robot.intake),
                 step("shoot second flower"),
                 fireShot(),
                 step("park"),
-                follow(Robot.follower, park()),
+                RobotCommands.followPath(Robot.follower, park()),
                 RobotCommands.raiseFlower(robot.intake),
                 step("complete"));
     }
