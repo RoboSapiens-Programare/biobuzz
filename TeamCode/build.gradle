@@ -28,6 +28,12 @@ android {
     defaultConfig {
         minSdk 24
     }
+
+    testOptions {
+        unitTests.all {
+            useJUnitPlatform()
+        }
+    }
 }
 
 dependencies {
@@ -42,11 +48,14 @@ dependencies {
     implementation "com.bylazar:limelightproxy:1.0.6"
 
     implementation "com.bylazar:configurables:1.0.5"
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.11.4"
 }
 
 spotless {
     java {
-        target 'src/main/java/**/*.java'
+        target 'src/main/java/**/*.java', 'src/test/java/**/*.java'
         palantirJavaFormat('2.97.0')
     }
 }

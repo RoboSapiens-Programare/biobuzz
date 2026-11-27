@@ -2,9 +2,9 @@ name: FTC CI Build
 
 on:
   push:
-    branches: [ "main", "master", "develop", "dev-stefan" ]
+    branches: ["main", "master", "develop", "dev-stefan"]
   pull_request:
-    branches: [ "main", "master", "develop" ]
+    branches: ["main", "master", "develop"]
 
 permissions:
   contents: read
@@ -20,18 +20,15 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17' # Match your FTC SDK Java version (use 21 if using the newest SDK)
-          cache: 'gradle'
+          distribution: "temurin"
+          java-version: "17" # Match your FTC SDK Java version (use 21 if using the newest SDK)
+          cache: "gradle"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Run unit tests
         run: ./gradlew :TeamCode:testDebugUnitTest
-
-      - name: Check project with Gradle
-        run: ./gradlew check
 
       - name: Build with Gradle
         run: ./gradlew build
