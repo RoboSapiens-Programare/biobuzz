@@ -2,7 +2,7 @@ name: FTC CI Build
 
 on:
   push:
-    branches: [ "main", "master", "develop" ]
+    branches: [ "main", "master", "develop", "dev-stefan" ]
   pull_request:
     branches: [ "main", "master", "develop" ]
 
@@ -26,6 +26,9 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Run unit tests
+        run: ./gradlew :TeamCode:testDebugUnitTest
 
       - name: Check project with Gradle
         run: ./gradlew check
