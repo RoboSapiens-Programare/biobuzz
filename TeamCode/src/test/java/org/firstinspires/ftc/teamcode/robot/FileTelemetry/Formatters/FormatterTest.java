@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class FormatterTest {
@@ -47,5 +48,49 @@ class FormatterTest {
         assertThrows(
                 UnsupportedOperationException.class, () -> formatter.getFields().add("extra"));
         assertEquals(List.of("action"), formatter.getFields());
+    }
+
+    @Test
+    void csvFormatterWritesNullAsEmptyCell() {
+        CsvFormatter formatter = new CsvFormatter();
+        formatter.addField("action");
+        formatter.addField("value");
+
+        assertEquals("shoot,", formatter.formatRow("shoot", null));
+    }
+
+    @Test
+    void csvFormatterHandlesEmptyFieldList() {
+        CsvFormatter formatter = new CsvFormatter();
+
+        assertEquals("", formatter.formatHeader());
+        assertEquals("", formatter.formatRow());
+    }
+
+    @Test
+    void nullFieldNameIsRejected() {
+        CsvFormatter formatter = new CsvFormatter();
+
+        assertFalse(formatter.addField(null));
+        assertEquals(List.of(), formatter.getFields());
+    }
+
+    @Test
+    void jsonFormatterPreservesStringsNullsAndEnums() {
+        JsonFormatter formatter = new JsonFormatter();
+        formatter.addField("action");
+        formatter.addField("label");
+        formatter.addField("value");
+
+        assertEquals(
+                "{\"action\":\"shoot\",\"value\":\"SECONDS\"}", formatter.formatRow("shoot", null, TimeUnit.SECONDS));
+    }
+
+    @Test
+    void jsonFormatterHasEmptyHeader() {
+        JsonFormatter formatter = new JsonFormatter();
+        formatter.addField("action");
+
+        assertEquals("", formatter.formatHeader());
     }
 }
